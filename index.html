@@ -633,7 +633,7 @@
         <span class="sh-link" onclick="go('s-all')">הצג הכל</span>
       </div>
       <div class="techs-row">
-        <div class="tc sel"><div class="tc-ico"><i class="ti ti-moon"></i></div><div class="tc-name">4-7-8</div><div class="tc-dur">3 דקות</div><span class="tc-tag">הרגעה</span></div>
+        <div class="tc sel" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-moon"></i></div><div class="tc-name">4-7-8</div><div class="tc-dur">3 דקות</div><span class="tc-tag">הרגעה</span></div>
         <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-square"></i></div><div class="tc-name">Box</div><div class="tc-dur">4 דקות</div><span class="tc-tag b">מיקוד</span></div>
         <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-bolt"></i></div><div class="tc-name">וים הוף</div><div class="tc-dur">6 דקות</div><span class="tc-tag w">אנרגיה</span></div>
         <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-wave-sine"></i></div><div class="tc-name">קוהרנטיות</div><div class="tc-dur">5 דקות</div><span class="tc-tag">HRV</span></div>
@@ -662,8 +662,8 @@
     <div class="scr" id="s-breathe">
       <div style="padding:22px 22px 0">
         <div class="back-btn" onclick="go('s-home')"><i class="ti ti-arrow-left"></i><span>חזור</span></div>
-        <div class="serif" style="font-size:22px;color:#e8e6f0;margin-bottom:3px">נשימת 4-7-8</div>
-        <div style="font-size:13px;color:#6b6480;margin-bottom:28px">איפוס מערכת העצבים · 4 סבבים</div>
+        <div class="serif" style="font-size:22px;color:#e8e6f0;margin-bottom:3px" id="b-title">נשימת 4-7-8</div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:28px" id="b-subtitle">איפוס מערכת העצבים · 4 סבבים</div>
         <div class="ring-wrap">
           <div class="b-ring" id="b-ring">
             <div class="b-phlbl" id="b-lbl">שאיפה</div>
@@ -842,7 +842,7 @@ function go(id) {
   const nid = NAV_MAP[id];
   if (nid) document.getElementById(nid).classList.add('on');
   document.getElementById('body').scrollTop = 0;
-  if (id === 's-breathe') { clearInterval(bTimer); bRound = 0; buildDots(); runRound(); }
+  if (id === 's-breathe') { clearInterval(bTimer); bRound = 0; startBreathe(); }
   else clearInterval(bTimer);
 }
 
@@ -1083,7 +1083,32 @@ function chkStr() {
 }
 
 // ════════ UI HELPERS ════════
-function selTc(el) { document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
+// טכניקות נשימה
+const TECHNIQUES = {
+  '4-7-8':       { name:'נשימת 4-7-8',      sub:'איפוס מערכת העצבים',      phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:7,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:8,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 7שנ׳','נשיפה 8שנ׳'], rounds:4, mins:3 },
+  'box':         { name:'Box Breathing',      sub:'שליטה בסטרס ומיקוד',      phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:4,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:4,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 4שנ׳','נשיפה 4שנ׳'], rounds:4, mins:4 },
+  'belly':       { name:'נשימת בטן',          sub:'הרגעה בסיסית ויומית',     phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:6,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 4שנ׳','נשיפה 6שנ׳','מנוחה 2שנ׳'],  rounds:5, mins:5 },
+  'wimhof':      { name:'שיטת וים הוף',       sub:'אנרגיה וחיזוק חיסוני',   phases:[{lbl:'שאיפה',sec:2,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:2,scale:'1',pp:'pp1'},{lbl:'עצירה',sec:4,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 2שנ׳','נשיפה 2שנ׳','עצירה 4שנ׳'],  rounds:6, mins:6 },
+};
+
+let currentTech = '4-7-8';
+
+function selTc(el) {
+  document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  // קבל את שם הטכניקה מהכרטיס
+  const name = el.querySelector('.tc-name').textContent.trim();
+  if      (name === '4-7-8')     currentTech = '4-7-8';
+  else if (name === 'Box')       currentTech = 'box';
+  else if (name === 'וים הוף')  currentTech = 'wimhof';
+  else if (name === 'קוהרנטיות') currentTech = 'box'; // דומה ל-box
+  else                           currentTech = 'belly';
+
+  // עדכן כרטיס "האימון של היום"
+  const tech = TECHNIQUES[currentTech];
+  document.querySelector('.t-name').textContent = tech.name;
+  document.querySelector('.t-desc').textContent = `${tech.sub} · ${tech.rounds} סבבים · ~${tech.mins} דקות`;
+}
 function selMc(el) { document.querySelectorAll('.mc').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
 function selOb(sel) {
   return function(el) {
@@ -1107,6 +1132,21 @@ const bPh = [
   { lbl:'נשיפה', sec:8, scale:'1',    pp:'pp2' },
 ];
 
+function startBreathe() {
+  const tech = TECHNIQUES[currentTech];
+  // עדכן מסך נשימה
+  document.getElementById('b-title').textContent  = tech.name;
+  document.getElementById('b-subtitle').textContent = tech.sub + ' · ' + tech.rounds + ' סבבים';
+  document.getElementById('pp0').querySelector('span').textContent = tech.ppLabels[0];
+  document.getElementById('pp1').querySelector('span').textContent = tech.ppLabels[1];
+  document.getElementById('pp2').querySelector('span').textContent = tech.ppLabels[2];
+  // הגדר phases ו-rounds
+  bTotal = tech.rounds;
+  // השתמש ב-phases של הטכניקה
+  window._bPh = tech.phases;
+  clearInterval(bTimer); bRound = 0; buildDots(); runRound();
+}
+
 function buildDots() {
   const d = document.getElementById('dots'); d.innerHTML = '';
   for (let i = 0; i < bTotal; i++) {
@@ -1120,12 +1160,13 @@ function runRound() {
   runPhase(0, () => { bRound++; runRound(); });
 }
 function runPhase(idx, done) {
-  if (idx >= bPh.length) { done(); return; }
-  const p = bPh[idx];
+  const phases = window._bPh || bPh;
+  if (idx >= phases.length) { done(); return; }
+  const p = phases[idx];
   document.getElementById('b-lbl').textContent = p.lbl;
   document.getElementById('b-ring').style.transform = 'scale(' + p.scale + ')';
-  bPh.forEach((_, i) => {
-    const el = document.getElementById(bPh[i].pp); if (el) el.classList.toggle('on', i === idx);
+  phases.forEach((_, i) => {
+    const el = document.getElementById(phases[i].pp); if (el) el.classList.toggle('on', i === idx);
   });
   let s = p.sec;
   document.getElementById('b-num').textContent = s;
@@ -1138,7 +1179,8 @@ function runPhase(idx, done) {
 }
 function stopBreath() {
   clearInterval(bTimer);
-  saveSession(3); // save ~3 min session
+  const tech = TECHNIQUES[currentTech];
+  saveSession(tech ? tech.mins : 3);
   showToast('✓ אימון הושלם! כל הכבוד');
   go('s-home');
 }
