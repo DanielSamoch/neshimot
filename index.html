@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Breathly — מאמן הנשימה החכם</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: 'Heebo', sans-serif;
+      direction: rtl;
+      background: #060608;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* ── PHONE SHELL ── */
+    .phone {
+      width: 100%;
+      max-width: 390px;
+      background: #0c0c0f;
+      border-radius: 40px;
+      border: 6px solid #1a1a22;
+      overflow: hidden;
+      min-height: 780px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 24px 7px;
+      background: #0c0c0f;
+      flex-shrink: 0;
+      direction: ltr;
+    }
+    .sb-time { font-size: 13px; font-weight: 600; color: #e8e6f0; }
+    .sb-icons { display: flex; gap: 5px; align-items: center; }
+    .sb-icons i { font-size: 13px; color: #9992b0; }
+
+    /* ── SCROLLABLE BODY ── */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    .body::-webkit-scrollbar { display: none; }
+
+    /* ── SCREENS ── */
+    .scr { display: none; }
+    .scr.on { display: block; animation: fadein 0.22s ease; }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── BOTTOM NAV ── */
+    .nav-bar {
+      display: none; /* shown after login */
+      justify-content: space-around;
+      background: #0c0c0f;
+      border-top: 0.5px solid #1a1a22;
+      padding: 10px 0 16px;
+      flex-shrink: 0;
+      direction: ltr;
+    }
+    .nav-bar.visible { display: flex; }
+    .ni {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; cursor: pointer; padding: 0 10px;
+    }
+    .ni i   { font-size: 21px; color: #3a3850; transition: color .15s; }
+    .ni span{ font-size: 10px; color: #3a3850; font-family: 'Heebo',sans-serif; transition: color .15s; }
+    .ni.on i, .ni.on span { color: #5DCAA5; }
+
+    /* ── COLOURS ── */
+    .teal   { color: #5DCAA5; }
+    .teal-lt{ color: #9FE1CB; }
+    .dim    { color: #6b6480; }
+    .dimmer { color: #4a4460; }
+    .bright { color: #e8e6f0; }
+    .serif  { font-family: 'Noto Serif Hebrew', serif; }
+
+    /* ── SURFACES ── */
+    .card {
+      background: #14141c;
+      border: 0.5px solid #2a2838;
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .card-green { border-color: #2a5a4a; background: #0d2820; }
+
+    /* ── INPUTS ── */
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; color: #6b6480; margin-bottom: 5px; }
+    .inp-wrap { position: relative; }
+    .inp {
+      width: 100%;
+      background: #14141c;
+      border: 0.5px solid #2a2838;
+      border-radius: 14px;
+      padding: 13px 16px 13px 44px;
+      font-size: 14px;
+      color: #e8e6f0;
+      font-family: 'Heebo', sans-serif;
+      outline: none;
+      text-align: right;
+      transition: border-color .2s;
+    }
+    .inp::placeholder { color: #3a3458; }
+    .inp:focus { border-color: #1D9E75; }
+    .inp.error { border-color: #c0392b; }
+    .inp-left-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #6b6480; font-size: 16px; pointer-events: none;
+    }
+    .inp-eye {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #6b6480; font-size: 15px; cursor: pointer;
+    }
+    .err-msg { font-size: 11px; color: #c0392b; margin-top: 4px; display: none; }
+    .err-msg.show { display: block; }
+
+    /* password strength */
+    .str-bar { height: 3px; border-radius: 2px; background: #1a1a22; margin-top: 7px; overflow: hidden; }
+    .str-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
+    .str-lbl  { font-size: 10px; margin-top: 3px; text-align: left; min-height: 14px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%; padding: 14px;
+      border-radius: 16px; border: none;
+      font-size: 15px; font-weight: 700;
+      font-family: 'Heebo', sans-serif;
+      cursor: pointer; transition: opacity .15s;
+      margin-bottom: 10px;
+    }
+    .btn:hover  { opacity: .88; }
+    .btn:active { opacity: .75; transform: scale(.99); }
+    .btn-primary { background: #1D9E75; color: #E1F5EE; }
+    .btn-primary:disabled { opacity: .4; pointer-events: none; }
+    .btn-outline {
+      background: transparent; color: #9992b0;
+      border: 0.5px solid #2a2838;
+    }
+    .btn-google {
+      background: #14141c; color: #e8e6f0;
+      border: 0.5px solid #2a2838;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-google:hover { border-color: #3a3850; }
+    .g-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: conic-gradient(#4285F4 0 25%, #EA4335 25% 50%, #FBBC05 50% 75%, #34A853 75%);
+      flex-shrink: 0;
+    }
+
+    /* or divider */
+    .or-div { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+    .or-line { flex: 1; height: 0.5px; background: #2a2838; }
+    .or-txt  { font-size: 12px; color: #4a4460; }
+
+    /* switch link */
+    .auth-switch { text-align: center; font-size: 13px; color: #6b6480; margin-top: 6px; }
+    .auth-switch a { color: #5DCAA5; cursor: pointer; text-decoration: none; }
+    .auth-switch a:hover { color: #9FE1CB; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: #1D9E75; color: #E1F5EE;
+      padding: 10px 20px; border-radius: 20px;
+      font-size: 13px; font-family: 'Heebo',sans-serif;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    /* loading spinner */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle; margin-left: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SECTION HEADER ── */
+    .sh { padding: 0 22px 10px; display: flex; justify-content: space-between; align-items: baseline; }
+    .sh-lbl  { font-size: 11px; font-weight: 500; color: #6b6480; letter-spacing: .04em; }
+    .sh-link { font-size: 12px; color: #5DCAA5; cursor: pointer; }
+    .sh-link:hover { color: #9FE1CB; }
+
+    /* ── TECHNIQUE CARDS ── */
+    .techs-row {
+      display: flex; flex-direction: row-reverse;
+      gap: 10px; padding: 0 16px 18px;
+      overflow-x: auto;
+    }
+    .techs-row::-webkit-scrollbar { display: none; }
+    .tc {
+      flex-shrink: 0;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 16px; padding: 14px; width: 134px;
+      cursor: pointer; transition: border-color .2s;
+    }
+    .tc:hover { border-color: #3a3850; }
+    .tc.sel   { border: 1.5px solid #1D9E75; background: #0d2820; }
+    .tc-ico   { width: 28px; height: 28px; border-radius: 8px; background: #1a1a24; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
+    .tc-ico i { font-size: 14px; color: #9992b0; }
+    .tc.sel .tc-ico { background: #0d2e20; }
+    .tc.sel .tc-ico i { color: #5DCAA5; }
+    .tc-name  { font-size: 13px; font-weight: 500; color: #e8e6f0; margin-bottom: 2px; }
+    .tc-dur   { font-size: 11px; color: #6b6480; }
+    .tc-tag   { display: inline-block; margin-top: 5px; font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #1a2a1a; color: #5DCAA5; }
+    .tc-tag.w { background: #2a1e10; color: #EF9F27; }
+    .tc-tag.b { background: #101a2a; color: #85B7EB; }
+
+    /* ── MOOD CHIPS ── */
+    .mood-row { display: flex; gap: 7px; flex-wrap: wrap; flex-direction: row-reverse; padding: 0 16px 18px; }
+    .mc {
+      padding: 6px 13px; border-radius: 20px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      font-size: 12px; color: #9992b0; cursor: pointer; transition: all .15s;
+    }
+    .mc:hover { border-color: #3a3850; color: #c8c0e0; }
+    .mc.sel   { background: #0d2820; border-color: #1D9E75; color: #9FE1CB; }
+
+    /* ── STATS GRID ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 16px 24px; }
+    .sbox { background: #14141c; border: 0.5px solid #2a2838; border-radius: 14px; padding: 12px; text-align: center; }
+    .sv { font-size: 22px; font-weight: 500; color: #e8e6f0; }
+    .sl { font-size: 11px; color: #6b6480; margin-top: 2px; }
+
+    /* ── BREATHE SCREEN ── */
+    .ring-wrap { display: flex; justify-content: center; margin-bottom: 24px; }
+    .b-ring {
+      width: 180px; height: 180px; border-radius: 50%;
+      border: 1.5px solid #2a5a4a; background: #0d2820;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: transform .7s ease;
+    }
+    .b-phlbl { font-size: 12px; color: #5DCAA5; letter-spacing: .04em; margin-bottom: 4px; }
+    .b-num   { font-family: 'Noto Serif Hebrew', serif; font-size: 54px; color: #e8e6f0; line-height: 1; }
+    .pph     { display: flex; justify-content: center; gap: 7px; margin-bottom: 20px; flex-direction: row-reverse; }
+    .pp      { padding: 5px 12px; border-radius: 20px; background: #14141c; border: 0.5px solid #2a2838; }
+    .pp.on   { background: #0d2820; border-color: #1D9E75; }
+    .pp span { font-size: 12px; color: #6b6480; }
+    .pp.on span { color: #9FE1CB; }
+    .dots-row { display: flex; justify-content: center; gap: 7px; margin-bottom: 24px; }
+    .dot      { width: 6px; height: 6px; border-radius: 50%; background: #2a2838; }
+    .dot.done { background: #1D9E75; }
+    .back-btn {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+      cursor: pointer; flex-direction: row-reverse; justify-content: flex-end;
+    }
+    .back-btn i    { font-size: 18px; color: #6b6480; transform: scaleX(-1); }
+    .back-btn span { font-size: 13px; color: #6b6480; }
+
+    /* ── ALL TECHNIQUES ── */
+    .tr {
+      display: flex; align-items: center; gap: 12px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 16px; padding: 14px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color .2s; flex-direction: row-reverse;
+    }
+    .tr:hover { border-color: #3a3850; }
+    .tr.free  { border-color: #2a5a4a; }
+    .tr-ico   { width: 36px; height: 36px; border-radius: 11px; background: #1a1a24; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tr-ico i { font-size: 17px; color: #9992b0; }
+    .tr.free .tr-ico { background: #0d2820; }
+    .tr.free .tr-ico i { color: #5DCAA5; }
+    .tr-body  { flex: 1; text-align: right; }
+    .tr-name  { font-size: 14px; font-weight: 500; color: #e8e6f0; margin-bottom: 2px; }
+    .tr-desc  { font-size: 12px; color: #6b6480; }
+    .tr-right { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .tr-dur   { font-size: 11px; color: #4a4460; }
+    .free-tag { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #0d3828; color: #5DCAA5; }
+    .pro-tag  { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #1a1826; color: #9992b0; display: flex; align-items: center; gap: 3px; }
+
+    /* ── PROGRESS ── */
+    .week-row { display: flex; justify-content: space-between; padding: 0 6px; margin-bottom: 20px; flex-direction: row-reverse; }
+    .day-col  { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .day-lbl  { font-size: 10px; color: #6b6480; }
+    .day-bg   { width: 24px; height: 60px; background: #14141c; border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
+    .day-bar  { width: 100%; border-radius: 6px; background: #1D9E75; }
+    .day-dot  { width: 6px; height: 6px; border-radius: 50%; background: #2a2838; }
+    .day-dot.done { background: #1D9E75; }
+    .bstat    { background: #14141c; border: 0.5px solid #2a2838; border-radius: 16px; padding: 16px; }
+    .bsn      { font-family: 'Noto Serif Hebrew', serif; font-size: 32px; color: #e8e6f0; }
+    .bst      { font-size: 11px; color: #5DCAA5; margin-top: 4px; }
+    .mh-row   { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-direction: row-reverse; }
+    .mh-lbl   { font-size: 12px; color: #9992b0; width: 54px; flex-shrink: 0; text-align: right; }
+    .mh-bg    { flex: 1; height: 6px; background: #1a1a22; border-radius: 3px; overflow: hidden; display: flex; justify-content: flex-end; }
+    .mh-bar   { height: 100%; border-radius: 3px; background: #1D9E75; }
+
+    /* ── PRO / PAYWALL ── */
+    .plan-toggle { display: flex; background: #14141c; border: 0.5px solid #2a2838; border-radius: 14px; padding: 3px; gap: 3px; direction: ltr; }
+    .pt-tab { flex: 1; padding: 9px; border-radius: 11px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: #6b6480; background: none; border: none; transition: all .2s; position: relative; font-family: 'Heebo',sans-serif; }
+    .pt-tab.on { background: #0d2820; color: #9FE1CB; }
+    .save-pill { position: absolute; top: -9px; right: 4px; background: #1D9E75; color: #E1F5EE; font-size: 10px; padding: 2px 7px; border-radius: 8px; font-weight: 500; }
+
+    /* ── ONBOARDING STEPS ── */
+    .sdot    { width: 7px; height: 7px; border-radius: 50%; background: #2a2838; transition: all .2s; }
+    .sdot.on { background: #1D9E75; width: 22px; border-radius: 4px; }
+    .ob-opt  {
+      display: flex; align-items: center; gap: 12px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color .2s; flex-direction: row-reverse;
+    }
+    .ob-opt:hover { border-color: #3a3850; }
+    .ob-opt.sel   { border-color: #1D9E75; background: #0d2820; }
+    .ob-ico   { width: 34px; height: 34px; border-radius: 10px; background: #1a1a24; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ob-ico i { font-size: 17px; color: #9992b0; }
+    .ob-opt.sel .ob-ico { background: #0d2820; }
+    .ob-opt.sel .ob-ico i { color: #5DCAA5; }
+
+    /* ── UNLOCK BANNER ── */
+    .unlock-ban {
+      background: #0d2820; border: 0.5px solid #2a5a4a;
+      border-radius: 16px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; flex-direction: row-reverse;
+    }
+    .ub-ico { width: 34px; height: 34px; border-radius: 11px; background: #1D9E75; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ub-ico i { font-size: 17px; color: #E1F5EE; }
+
+    /* ── SUCCESS ANIMATION ── */
+    .success-ring {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #0d2820; border: 1.5px solid #2a5a4a;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      animation: pop .4s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes pop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .wchip {
+      display: flex; align-items: center; gap: 10px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 12px; padding: 12px 14px;
+      flex-direction: row-reverse;
+      animation: slide .3s ease forwards; opacity: 0;
+    }
+    .wchip:nth-child(1) { animation-delay: .1s; }
+    .wchip:nth-child(2) { animation-delay: .25s; }
+    .wchip:nth-child(3) { animation-delay: .4s; }
+    @keyframes slide { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span class="sb-time" id="clock">9:41</span>
+    <div class="sb-icons">
+      <i class="ti ti-wifi"></i>
+      <i class="ti ti-battery-2"></i>
+    </div>
+  </div>
+
+  <div class="body" id="body">
+
+    <!-- ════════════════════════════════
+         SPLASH
+    ════════════════════════════════ -->
+    <div class="scr on" id="s-splash">
+      <div style="min-height:650px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;background:radial-gradient(ellipse at 50% 35%,#0d2820 0%,#0c0c0f 68%)">
+        <div style="width:84px;height:84px;border-radius:26px;background:#0d2820;border:1.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 22px">
+          <i class="ti ti-wind" style="font-size:40px;color:#5DCAA5"></i>
+        </div>
+        <div class="serif" style="font-size:40px;color:#e8e6f0;margin-bottom:10px">Breathly</div>
+        <div style="font-size:16px;color:#6b6480;margin-bottom:52px;line-height:1.7">מאמן הנשימה החכם שלך<br>מבוסס בינה מלאכותית</div>
+        <button class="btn btn-primary" onclick="go('s-register')">התחל — בחינם</button>
+        <button class="btn btn-outline" onclick="go('s-login')">יש לי כבר חשבון</button>
+        <div style="font-size:11px;color:#3a3458;margin-top:10px">ללא כרטיס אשראי · ביטול בכל עת</div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         REGISTER
+    ════════════════════════════════ -->
+    <div class="scr" id="s-register">
+      <div style="padding:0 22px 32px">
+        <div style="text-align:center;padding:30px 0 22px">
+          <div style="width:56px;height:56px;border-radius:17px;background:#0d2820;border:1px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <i class="ti ti-wind" style="font-size:24px;color:#5DCAA5"></i>
+          </div>
+          <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px">יצירת חשבון</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.6">הצטרף ל-12,000+ ישראלים שנושמים טוב יותר</div>
+        </div>
+
+        <button class="btn btn-google" onclick="signInGoogle()">
+          <div class="g-dot"></div>
+          המשך עם Google
+        </button>
+        <div class="or-div"><div class="or-line"></div><div class="or-txt">או</div><div class="or-line"></div></div>
+
+        <div class="field">
+          <label>שם מלא</label>
+          <div class="inp-wrap">
+            <input class="inp" id="reg-name" type="text" placeholder="ישראל ישראלי" oninput="valReg()">
+            <i class="ti ti-user inp-left-icon"></i>
+          </div>
+        </div>
+        <div class="field">
+          <label>אימייל</label>
+          <div class="inp-wrap">
+            <input class="inp" id="reg-email" type="email" placeholder="you@gmail.com" dir="ltr" style="text-align:left" oninput="valReg()">
+            <i class="ti ti-mail inp-left-icon"></i>
+          </div>
+        </div>
+        <div class="field">
+          <label>סיסמה</label>
+          <div class="inp-wrap">
+            <input class="inp" id="reg-pw" type="password" placeholder="לפחות 8 תווים" dir="ltr" style="text-align:left" oninput="valReg();chkStr()">
+            <span class="inp-eye" onclick="togglePw('reg-pw',this)"><i class="ti ti-eye"></i></span>
+          </div>
+          <div class="str-bar"><div class="str-fill" id="str-fill"></div></div>
+          <div class="str-lbl" id="str-lbl"></div>
+        </div>
+
+        <div id="reg-err" class="err-msg"></div>
+        <div style="font-size:11px;color:#4a4460;text-align:center;margin-bottom:14px;line-height:1.6">
+          בהרשמה אתה מסכים ל<span style="color:#5DCAA5;cursor:pointer">תנאי השימוש</span> ו<span style="color:#5DCAA5;cursor:pointer">מדיניות הפרטיות</span>
+        </div>
+        <button class="btn btn-primary" id="reg-btn" onclick="doRegister()" disabled>צור חשבון</button>
+        <div class="auth-switch">כבר רשום? <a onclick="go('s-login')">כניסה</a></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         LOGIN
+    ════════════════════════════════ -->
+    <div class="scr" id="s-login">
+      <div style="padding:0 22px 32px">
+        <div style="text-align:center;padding:30px 0 22px">
+          <div style="width:56px;height:56px;border-radius:17px;background:#0d2820;border:1px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <i class="ti ti-wind" style="font-size:24px;color:#5DCAA5"></i>
+          </div>
+          <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px">כניסה</div>
+          <div style="font-size:13px;color:#6b6480">ברוך הבא חזרה 👋</div>
+        </div>
+
+        <button class="btn btn-google" onclick="signInGoogle()">
+          <div class="g-dot"></div>
+          המשך עם Google
+        </button>
+        <div class="or-div"><div class="or-line"></div><div class="or-txt">או</div><div class="or-line"></div></div>
+
+        <div class="field">
+          <label>אימייל</label>
+          <div class="inp-wrap">
+            <input class="inp" id="login-email" type="email" placeholder="you@gmail.com" dir="ltr" style="text-align:left" oninput="valLogin()">
+            <i class="ti ti-mail inp-left-icon"></i>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:6px">
+          <label>סיסמה</label>
+          <div class="inp-wrap">
+            <input class="inp" id="login-pw" type="password" placeholder="הסיסמה שלך" dir="ltr" style="text-align:left" oninput="valLogin()">
+            <span class="inp-eye" onclick="togglePw('login-pw',this)"><i class="ti ti-eye"></i></span>
+          </div>
+        </div>
+        <div style="text-align:left;margin-bottom:16px">
+          <span style="font-size:12px;color:#5DCAA5;cursor:pointer" onclick="go('s-forgot')">שכחת סיסמה?</span>
+        </div>
+        <div id="login-err" class="err-msg"></div>
+        <button class="btn btn-primary" id="login-btn" onclick="doLogin()" disabled>כניסה</button>
+        <div class="auth-switch">חדש כאן? <a onclick="go('s-register')">צור חשבון</a></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         FORGOT PASSWORD
+    ════════════════════════════════ -->
+    <div class="scr" id="s-forgot">
+      <div style="padding:24px 22px 32px">
+        <div class="back-btn" onclick="go('s-login')" style="margin-bottom:28px">
+          <i class="ti ti-arrow-left"></i><span>חזור</span>
+        </div>
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="width:54px;height:54px;border-radius:16px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <i class="ti ti-key" style="font-size:24px;color:#5DCAA5"></i>
+          </div>
+          <div class="serif" style="font-size:22px;color:#e8e6f0;margin-bottom:6px">שחזור סיסמה</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.6">הכנס את האימייל שלך ונשלח<br>קישור לאיפוס הסיסמה</div>
+        </div>
+        <div class="field">
+          <label>אימייל</label>
+          <div class="inp-wrap">
+            <input class="inp" id="forgot-email" type="email" placeholder="you@gmail.com" dir="ltr" style="text-align:left" oninput="valForgot()">
+            <i class="ti ti-mail inp-left-icon"></i>
+          </div>
+        </div>
+        <div id="forgot-err" class="err-msg"></div>
+        <button class="btn btn-primary" id="forgot-btn" onclick="doForgot()" disabled>שלח קישור לאיפוס</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 1
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob1">
+      <div style="padding:28px 22px 24px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:26px">
+          <div class="sdot on"></div><div class="sdot"></div><div class="sdot"></div>
+        </div>
+        <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px;text-align:center">מה המטרה העיקרית שלך?</div>
+        <div style="font-size:13px;color:#6b6480;text-align:center;margin-bottom:22px">נתאים לך את חוויית הנשימה</div>
+        <div class="ob-opt sel" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-brain"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">הפחתת לחץ וחרדה</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להרגיש רגוע יותר בחיי היום יום</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-moon"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">שיפור השינה</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להירדם מהר יותר ולישון עמוק</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-bolt"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">יותר אנרגיה ומיקוד</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להיות חד ופרודוקטיבי יותר</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-heart"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">בריאות כללית</div><div style="font-size:12px;color:#6b6480;margin-top:2px">HRV, לחץ דם ואיכות חיים</div></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="go('s-ob2')">המשך</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 2
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob2">
+      <div style="padding:28px 22px 24px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:26px">
+          <div class="sdot"></div><div class="sdot on"></div><div class="sdot"></div>
+        </div>
+        <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px;text-align:center">מתי בדרך כלל יש לך זמן?</div>
+        <div style="font-size:13px;color:#6b6480;text-align:center;margin-bottom:22px">נשלח לך תזכורות בזמן הנכון</div>
+        <div class="ob-opt sel" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-sun"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">בוקר (6:00–9:00)</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להתחיל את היום בכוח</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-clock"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">צהריים (12:00–14:00)</div><div style="font-size:12px;color:#6b6480;margin-top:2px">איפוס באמצע היום</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-moon"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">ערב (20:00–23:00)</div><div style="font-size:12px;color:#6b6480;margin-top:2px">הכנה לשינה</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb('.ob-opt')">
+          <div class="ob-ico"><i class="ti ti-refresh"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">גמיש — כשמתאים לי</div><div style="font-size:12px;color:#6b6480;margin-top:2px">ללא תזכורות קבועות</div></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="go('s-ob3')">הבא</button>
+        <button class="btn btn-outline" onclick="go('s-ob1')">חזור</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 3 — Welcome
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob3">
+      <div style="padding:28px 22px 32px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:26px">
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot on"></div>
+        </div>
+        <div style="text-align:center;padding:20px 0">
+          <div class="success-ring"><i class="ti ti-check" style="font-size:30px;color:#5DCAA5"></i></div>
+          <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:6px">הכל מוכן!</div>
+          <div style="font-size:14px;color:#6b6480;line-height:1.7">החשבון שלך נוצר בהצלחה.<br>הנה מה שמחכה לך:</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin:20px 0 26px">
+          <div class="wchip"><i class="ti ti-wind" style="color:#5DCAA5;font-size:16px"></i><span style="font-size:13px;color:#c8c0e0;text-align:right">3 טכניקות נשימה חינמיות</span></div>
+          <div class="wchip"><i class="ti ti-brain" style="color:#5DCAA5;font-size:16px"></i><span style="font-size:13px;color:#c8c0e0;text-align:right">מאמן AI שמסתגל אליך</span></div>
+          <div class="wchip"><i class="ti ti-chart-line" style="color:#5DCAA5;font-size:16px"></i><span style="font-size:13px;color:#c8c0e0;text-align:right">מעקב התקדמות אישי</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="enterApp()">בוא נתחיל לנשום ←</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         HOME
+    ════════════════════════════════ -->
+    <div class="scr" id="s-home">
+      <div style="padding:22px 22px 14px">
+        <div style="font-size:11px;color:#6b6480;letter-spacing:.04em;margin-bottom:4px" id="greeting">בוקר טוב</div>
+        <div class="serif" style="font-size:26px;color:#e8e6f0;line-height:1.3">מוכן <span class="teal-lt">לנשום?</span></div>
+      </div>
+
+      <div class="card" style="margin:0 16px 16px">
+        <div style="font-size:11px;color:#6b6480;margin-bottom:10px">האימון של היום</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-direction:row-reverse">
+          <div style="width:48px;height:48px;border-radius:50%;border:1.5px solid #2a5a4a;background:#0d2820;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-wind" style="font-size:20px;color:#5DCAA5"></i>
+          </div>
+          <div style="flex:1;text-align:right">
+            <div style="font-size:14px;font-weight:500;color:#e8e6f0;margin-bottom:2px">נשימת 4-7-8</div>
+            <div style="font-size:12px;color:#6b6480">הרגעה · 4 סבבים · ~3 דקות</div>
+          </div>
+          <button class="btn btn-primary" style="width:auto;margin:0;padding:8px 16px;font-size:13px;border-radius:12px;margin-bottom:0" onclick="go('s-breathe')">התחל</button>
+        </div>
+      </div>
+
+      <div class="sh">
+        <span class="sh-lbl">טכניקות</span>
+        <span class="sh-link" onclick="go('s-all')">הצג הכל</span>
+      </div>
+      <div class="techs-row">
+        <div class="tc sel"><div class="tc-ico"><i class="ti ti-moon"></i></div><div class="tc-name">4-7-8</div><div class="tc-dur">3 דקות</div><span class="tc-tag">הרגעה</span></div>
+        <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-square"></i></div><div class="tc-name">Box</div><div class="tc-dur">4 דקות</div><span class="tc-tag b">מיקוד</span></div>
+        <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-bolt"></i></div><div class="tc-name">וים הוף</div><div class="tc-dur">6 דקות</div><span class="tc-tag w">אנרגיה</span></div>
+        <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-wave-sine"></i></div><div class="tc-name">קוהרנטיות</div><div class="tc-dur">5 דקות</div><span class="tc-tag">HRV</span></div>
+      </div>
+
+      <div class="sh" style="margin-top:2px"><span class="sh-lbl">איך אתה מרגיש?</span></div>
+      <div class="mood-row">
+        <div class="mc" onclick="selMc(this)">חרד</div>
+        <div class="mc sel" onclick="selMc(this)">לחוץ</div>
+        <div class="mc" onclick="selMc(this)">עייף</div>
+        <div class="mc" onclick="selMc(this)">מבולבל</div>
+        <div class="mc" onclick="selMc(this)">בסדר</div>
+      </div>
+
+      <div class="sh"><span class="sh-lbl">הסטטיסטיקות שלך</span></div>
+      <div class="stats-grid">
+        <div class="sbox"><div class="sv" id="stat-streak">0</div><div class="sl">ימי רצף</div></div>
+        <div class="sbox"><div class="sv" id="stat-sessions">0</div><div class="sl">אימונים</div></div>
+        <div class="sbox"><div class="sv" id="stat-mins">0</div><div class="sl">דקות</div></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         BREATHE
+    ════════════════════════════════ -->
+    <div class="scr" id="s-breathe">
+      <div style="padding:22px 22px 0">
+        <div class="back-btn" onclick="go('s-home')"><i class="ti ti-arrow-left"></i><span>חזור</span></div>
+        <div class="serif" style="font-size:22px;color:#e8e6f0;margin-bottom:3px">נשימת 4-7-8</div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:28px">איפוס מערכת העצבים · 4 סבבים</div>
+        <div class="ring-wrap">
+          <div class="b-ring" id="b-ring">
+            <div class="b-phlbl" id="b-lbl">שאיפה</div>
+            <div class="b-num" id="b-num">4</div>
+          </div>
+        </div>
+        <div class="pph">
+          <div class="pp on" id="pp0"><span>שאיפה 4שנ׳</span></div>
+          <div class="pp" id="pp1"><span>עצירה 7שנ׳</span></div>
+          <div class="pp" id="pp2"><span>נשיפה 8שנ׳</span></div>
+        </div>
+        <div class="dots-row" id="dots"></div>
+        <button class="btn btn-outline" onclick="stopBreath()" style="margin:0 0 24px">סיים אימון</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ALL TECHNIQUES
+    ════════════════════════════════ -->
+    <div class="scr" id="s-all">
+      <div style="padding:20px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-direction:row-reverse">
+          <button style="background:none;border:none;cursor:pointer;color:#6b6480;font-size:20px;padding:0" onclick="go('s-home')"><i class="ti ti-arrow-left" style="transform:scaleX(-1);display:inline-block"></i></button>
+          <div class="serif" style="font-size:22px;color:#e8e6f0">כל הטכניקות</div>
+        </div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:20px;padding-right:30px">שדרג ל-Pro לגישה לכל 12</div>
+        <div class="tr free" onclick="go('s-breathe')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">נשימת 4-7-8</div><div class="tr-desc">הרגעה · חרדה · לפני שינה</div></div><div class="tr-right"><div class="tr-dur">3 דק׳</div><div class="free-tag">חינם</div></div></div>
+        <div class="tr free" onclick="go('s-breathe')"><div class="tr-ico"><i class="ti ti-square"></i></div><div class="tr-body"><div class="tr-name">Box Breathing</div><div class="tr-desc">מיקוד · סטרס · Navy SEALs</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="free-tag">חינם</div></div></div>
+        <div class="tr free" onclick="go('s-breathe')"><div class="tr-ico"><i class="ti ti-wind"></i></div><div class="tr-body"><div class="tr-name">נשימת בטן</div><div class="tr-desc">מתחילים · בסיסי · איפוס יומי</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
+        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-bolt"></i></div><div class="tr-body"><div class="tr-name">שיטת וים הוף</div><div class="tr-desc">אנרגיה · חיסון · קור</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-wave-sine"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות</div><div class="tr-desc">HRV · בריאות הלב</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-sun"></i></div><div class="tr-body"><div class="tr-name">ערות בוקר</div><div class="tr-desc">השכמה · ערנות · ללא קפאין</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">ירידה לשינה</div><div class="tr-desc">שינה עמוקה · נדודי שינה</div></div><div class="tr-right"><div class="tr-dur">8 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-brain"></i></div><div class="tr-body"><div class="tr-name">הולוטרופית</div><div class="tr-desc">עבודה עמוקה · זרימה</div></div><div class="tr-right"><div class="tr-dur">10 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-heart"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות לבבית</div><div class="tr-desc">לחץ דם · אריכות ימים</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="unlock-ban" onclick="go('s-pro')" style="margin-top:14px">
+          <div class="ub-ico"><i class="ti ti-crown"></i></div>
+          <div style="flex:1;text-align:right"><div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">פתח את כל 12 הטכניקות</div><div style="font-size:12px;color:#4a7a60">התחל ניסיון חינם 7 ימים ←</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PROGRESS
+    ════════════════════════════════ -->
+    <div class="scr" id="s-progress">
+      <div style="padding:22px 16px 24px">
+        <div style="margin-bottom:20px;padding:0 6px">
+          <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:4px">ההתקדמות שלך</div>
+          <div style="font-size:13px;color:#6b6480">השבוע · 5 מתוך 7 ימים</div>
+        </div>
+        <div class="week-row">
+          <div class="day-col"><div class="day-bg"><div class="day-bar" style="height:80%"></div></div><div class="day-lbl">א׳</div><div class="day-dot done"></div></div>
+          <div class="day-col"><div class="day-bg"><div class="day-bar" style="height:55%"></div></div><div class="day-lbl">ב׳</div><div class="day-dot done"></div></div>
+          <div class="day-col"><div class="day-bg"><div class="day-bar" style="height:100%"></div></div><div class="day-lbl">ג׳</div><div class="day-dot done"></div></div>
+          <div class="day-col"><div class="day-bg"></div><div class="day-lbl">ד׳</div><div class="day-dot"></div></div>
+          <div class="day-col"><div class="day-bg"><div class="day-bar" style="height:65%"></div></div><div class="day-lbl">ה׳</div><div class="day-dot done"></div></div>
+          <div class="day-col"><div class="day-bg"><div class="day-bar" style="height:45%"></div></div><div class="day-lbl">ו׳</div><div class="day-dot done"></div></div>
+          <div class="day-col"><div class="day-bg"></div><div class="day-lbl">ש׳</div><div class="day-dot"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div class="bstat"><div class="bsn" id="p-sessions">23</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">אימונים</div><div style="font-size:12px;color:#6b6480">סה״כ</div><div class="bst">+4 השבוע</div></div>
+          <div class="bstat"><div class="bsn" id="p-mins">68</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">דקות</div><div style="font-size:12px;color:#6b6480">של נשימה</div><div class="bst">+12 השבוע</div></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-size:12px;color:#6b6480;margin-bottom:12px">התפלגות מצבי רוח</div>
+          <div class="mh-row"><div class="mh-lbl">רוגע</div><div class="mh-bg"><div class="mh-bar" style="width:72%"></div></div><div style="font-size:11px;color:#4a4460;width:28px;text-align:left">72%</div></div>
+          <div class="mh-row"><div class="mh-lbl">מיקוד</div><div class="mh-bg"><div class="mh-bar" style="width:55%;background:#85B7EB"></div></div><div style="font-size:11px;color:#4a4460;width:28px;text-align:left">55%</div></div>
+          <div class="mh-row"><div class="mh-lbl">לחץ</div><div class="mh-bg"><div class="mh-bar" style="width:30%;background:#EF9F27"></div></div><div style="font-size:11px;color:#4a4460;width:28px;text-align:left">30%</div></div>
+        </div>
+        <div class="card-green card">
+          <div style="font-size:10px;color:#5DCAA5;letter-spacing:.04em;margin-bottom:6px">תובנת מאמן AI</div>
+          <div style="font-size:13px;color:#9FE1CB;line-height:1.6">רמת הלחץ שלך יורדת 40% אחרי נשימת בוקר. נסה להוסיף 3 דקות לפני 9:00 מחר.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PRO / PAYWALL
+    ════════════════════════════════ -->
+    <div class="scr" id="s-pro">
+      <div style="padding:0 0 28px">
+        <div style="text-align:center;padding:28px 22px 20px">
+          <div style="width:58px;height:58px;border-radius:18px;background:#0d2820;border:1px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <i class="ti ti-crown" style="font-size:26px;color:#5DCAA5"></i>
+          </div>
+          <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:6px">Breathly <span class="teal-lt">Pro</span></div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.7">הצטרף ל-12,000+ ישראלים שנושמים טוב יותר.<br>נסה בחינם 7 ימים.</div>
+        </div>
+
+        <div class="plan-toggle" style="margin:0 16px 16px">
+          <button class="pt-tab" id="ptm" onclick="setPlan('m')">חודשי</button>
+          <button class="pt-tab on" id="pty" onclick="setPlan('y')">שנתי<span class="save-pill">חסוך 44%</span></button>
+        </div>
+        <div style="text-align:center;margin-bottom:18px">
+          <span class="serif" style="font-size:44px;color:#e8e6f0" id="pbig">₪19</span>
+          <span style="font-size:14px;color:#6b6480"> / חודש</span>
+          <div style="font-size:12px;color:#4a4460;margin-top:4px" id="pnote">חיוב של ₪229/שנה · ביטול בכל עת</div>
+        </div>
+
+        <div style="padding:0 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-infinity" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">אימונים ללא הגבלה</div><div style="font-size:12px;color:#4a4460;margin-top:2px">כל 12 הטכניקות, ללא מכסה יומית</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-brain" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">מאמן AI אישי</div><div style="font-size:12px;color:#4a4460;margin-top:2px">מסתגל לדפוסי הלחץ שלך לאורך זמן</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-chart-line" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">מעקב HRV והתקדמות</div><div style="font-size:12px;color:#4a4460;margin-top:2px">צפה בשיפור מערכת העצבים שבועית</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-moon" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">תוכניות שינה והשכמה</div><div style="font-size:12px;color:#4a4460;margin-top:2px">שגרות מודרכות לבוקר ולילה</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 16px;direction:ltr">
+          <div style="display:flex"><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5">ימ</div><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5;margin-left:-6px">שר</div><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5;margin-left:-6px">אכ</div></div>
+          <span style="font-size:12px;color:#6b6480;font-family:'Heebo',sans-serif"><strong style="color:#9992b0">12,847</strong> חברים · 4.8 <i class="ti ti-star" style="font-size:11px;color:#5DCAA5"></i></span>
+        </div>
+
+        <div style="padding:0 16px 10px">
+          <button class="btn btn-primary" onclick="doStripeCheckout()" id="stripe-btn">התחל ניסיון חינם ל-7 ימים</button>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">ללא חיוב היום · בטל לפני סיום הניסיון</div>
+        <div style="margin:0 16px;background:#14141c;border:.5px solid #2a2838;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-direction:row-reverse">
+          <i class="ti ti-shield-check" style="font-size:17px;color:#5DCAA5;flex-shrink:0"></i>
+          <p style="font-size:12px;color:#6b6480;line-height:1.5;text-align:right">ערבות 30 יום. לא הרגשת רגוע יותר? החזר מלא, ללא שאלות.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- BOTTOM NAV -->
+  <div class="nav-bar" id="nav-bar">
+    <div class="ni" id="ni-pro" onclick="go('s-pro')"><i class="ti ti-crown"></i><span>Pro</span></div>
+    <div class="ni" id="ni-prog" onclick="go('s-progress')"><i class="ti ti-chart-line"></i><span>התקדמות</span></div>
+    <div class="ni" id="ni-breathe" onclick="go('s-breathe')"><i class="ti ti-wind"></i><span>נשימה</span></div>
+    <div class="ni on" id="ni-home" onclick="go('s-home')"><i class="ti ti-home"></i><span>בית</span></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG — החלף בערכים שלך מ-Supabase ו-Stripe
+// ════════════════════════════════════════
+const SUPABASE_URL  = 'https://gjbgbabjqtziwkrlxldp.supabase.co';   // ← מ-Supabase Settings > API
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqYmdiYWJqcXR6aXdrcmx4bGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzkyNzYsImV4cCI6MjA5Nzg1NTI3Nn0.JiMCNoklSyqrXNe2WqDyd4Ii8itswylxTUqbhemrLKI';               // ← מ-Supabase Settings > API
+const LS_STORE = "neshimot"; // Lemon Squeezy store
+const LS_MONTHLY_URL = "https://neshimot.lemonsqueezy.com/checkout/buy/1690b3b0-1fc7-45de-ba85-8cd72dcba111";
+const LS_YEARLY_URL = "https://neshimot.lemonsqueezy.com/checkout/buy/0383549b-ec12-4f69-b872-9faf5ff6a81f";
+
+// Init
+const sb     = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+// ════════ NAVIGATION ════════
+const NAV_MAP = {
+  's-home':    'ni-home',
+  's-breathe': 'ni-breathe',
+  's-progress':'ni-prog',
+  's-pro':     'ni-pro',
+};
+
+function go(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  const nid = NAV_MAP[id];
+  if (nid) document.getElementById(nid).classList.add('on');
+  document.getElementById('body').scrollTop = 0;
+  if (id === 's-breathe') { clearInterval(bTimer); bRound = 0; buildDots(); runRound(); }
+  else clearInterval(bTimer);
+}
+
+function enterApp() {
+  document.getElementById('nav-bar').classList.add('visible');
+  setGreeting();
+  go('s-home');
+}
+
+// ════════ CLOCK & GREETING ════════
+function setGreeting() {
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : 'ערב טוב';
+}
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' +
+    now.getMinutes().toString().padStart(2,'0');
+}
+updateClock(); setInterval(updateClock, 10000);
+
+// ════════ TOAST ════════
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ════════ AUTH — SUPABASE ════════
+async function doRegister() {
+  const btn   = document.getElementById('reg-btn');
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw    = document.getElementById('reg-pw').value;
+  const err   = document.getElementById('reg-err');
+
+  btn.innerHTML = 'יוצר חשבון<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const { data, error } = await sb.auth.signUp({
+    email, password: pw,
+    options: { data: { full_name: name } }
+  });
+
+  btn.innerHTML = 'צור חשבון';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = translateError(error.message);
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+
+  // Save user profile
+  if (data.user) {
+    await sb.from('profiles').upsert({
+      id: data.user.id,
+      full_name: name,
+      sessions: 0,
+      streak: 0,
+      total_mins: 0
+    });
+  }
+
+  showToast('✓ נשלח אימייל אימות — בדוק את תיבת הדואר');
+  go('s-ob1');
+}
+
+async function doLogin() {
+  const btn   = document.getElementById('login-btn');
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const err   = document.getElementById('login-err');
+
+  btn.innerHTML = 'מתחבר<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+
+  btn.innerHTML = 'כניסה';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = translateError(error.message);
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  await loadUserStats(data.user.id);
+  enterApp();
+}
+
+async function signInGoogle() {
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function doForgot() {
+  const btn   = document.getElementById('forgot-btn');
+  const email = document.getElementById('forgot-email').value.trim();
+  const err   = document.getElementById('forgot-err');
+
+  btn.innerHTML = 'שולח<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href + '?reset=true'
+  });
+
+  btn.innerHTML = 'שלח קישור לאיפוס';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = translateError(error.message);
+    err.classList.add('show'); return;
+  }
+  showToast('✓ קישור נשלח לאימייל שלך');
+  setTimeout(() => go('s-login'), 1800);
+}
+
+function translateError(msg) {
+  if (msg.includes('Invalid login'))    return 'אימייל או סיסמה שגויים';
+  if (msg.includes('already registered')) return 'האימייל כבר קיים — נסה להתחבר';
+  if (msg.includes('Password should'))  return 'הסיסמה חייבת להכיל לפחות 6 תווים';
+  if (msg.includes('Unable to validate')) return 'אימייל לא תקין';
+  return 'שגיאה — נסה שוב';
+}
+
+// ════════ USER STATS ════════
+async function loadUserStats(userId) {
+  const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if (data) {
+    document.getElementById('stat-streak').textContent   = data.streak   || 0;
+    document.getElementById('stat-sessions').textContent = data.sessions  || 0;
+    document.getElementById('stat-mins').textContent     = (data.total_mins || 0) + ' דק׳';
+    document.getElementById('p-sessions').textContent    = data.sessions  || 0;
+    document.getElementById('p-mins').textContent        = data.total_mins|| 0;
+  }
+}
+
+async function saveSession(mins) {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (profile) {
+    await sb.from('profiles').update({
+      sessions:   (profile.sessions   || 0) + 1,
+      streak:     (profile.streak     || 0) + 1,
+      total_mins: (profile.total_mins || 0) + mins
+    }).eq('id', user.id);
+    await loadUserStats(user.id);
+  }
+}
+
+// ════════ STRIPE CHECKOUT ════════
+async function doStripeCheckout() {
+  const btn = document.getElementById('stripe-btn');
+  btn.innerHTML = 'מכין תשלום<span class="spinner"></span>';
+  btn.disabled = true;
+
+  // בחר URL לפי תוכנית
+  const isYearly = document.getElementById('pty').classList.contains('on');
+  const checkoutUrl = isYearly ? LS_YEARLY_URL : LS_MONTHLY_URL;
+
+  // קבל את פרטי המשתמש מ-Supabase
+  const { data: { user } } = await sb.auth.getUser();
+
+  // הוסף את האימייל לURL כדי למלא אוטומטית בדף התשלום
+  const finalUrl = user?.email
+    ? `${checkoutUrl}?checkout[email]=${encodeURIComponent(user.email)}`
+    : checkoutUrl;
+
+  // עבור לדף התשלום של Lemon Squeezy
+  window.location.href = finalUrl;
+}
+
+// ════════ AUTH STATE LISTENER ════════
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    await loadUserStats(session.user.id);
+    enterApp();
+  }
+});
+
+// Check on load
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) { loadUserStats(session.user.id); enterApp(); }
+});
+
+// ════════ VALIDATION ════════
+function valReg() {
+  const n = document.getElementById('reg-name').value.trim();
+  const e = document.getElementById('reg-email').value.trim();
+  const p = document.getElementById('reg-pw').value;
+  const ok = n.length > 1 && /\S+@\S+\.\S+/.test(e) && p.length >= 8;
+  document.getElementById('reg-btn').disabled = !ok;
+}
+function valLogin() {
+  const e = document.getElementById('login-email').value.trim();
+  const p = document.getElementById('login-pw').value;
+  document.getElementById('login-btn').disabled = !(/\S+@\S+\.\S+/.test(e) && p.length >= 6);
+}
+function valForgot() {
+  const e = document.getElementById('forgot-email').value.trim();
+  document.getElementById('forgot-btn').disabled = !/\S+@\S+\.\S+/.test(e);
+}
+function togglePw(id, icon) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  icon.innerHTML = inp.type === 'text'
+    ? '<i class="ti ti-eye-off"></i>' : '<i class="ti ti-eye"></i>';
+}
+function chkStr() {
+  const pw = document.getElementById('reg-pw').value;
+  const fill = document.getElementById('str-fill');
+  const lbl  = document.getElementById('str-lbl');
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const lvls = [
+    { w:'20%', c:'#c0392b', t:'חלשה' },
+    { w:'40%', c:'#EF9F27', t:'בסיסית' },
+    { w:'60%', c:'#EF9F27', t:'סבירה' },
+    { w:'80%', c:'#5DCAA5', t:'טובה' },
+    { w:'100%',c:'#1D9E75', t:'חזקה' },
+  ];
+  const l = lvls[Math.min(score, 4)];
+  fill.style.width = pw.length ? l.w : '0';
+  fill.style.background = l.c;
+  lbl.style.color = l.c;
+  lbl.textContent = pw.length ? l.t : '';
+}
+
+// ════════ UI HELPERS ════════
+function selTc(el) { document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
+function selMc(el) { document.querySelectorAll('.mc').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
+function selOb(sel) {
+  return function(el) {
+    document.querySelectorAll(sel).forEach(c => c.classList.remove('sel'));
+    el.classList.add('sel');
+  };
+}
+// fix — onclick passes the element
+document.querySelectorAll('.ob-opt').forEach(el => {
+  el.addEventListener('click', function() {
+    this.closest('div').querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+    this.classList.add('sel');
+  });
+});
+
+// ════════ BREATHE ENGINE ════════
+let bTimer = null, bRound = 0, bTotal = 4;
+const bPh = [
+  { lbl:'שאיפה', sec:4, scale:'1.13', pp:'pp0' },
+  { lbl:'עצירה', sec:7, scale:'1.13', pp:'pp1' },
+  { lbl:'נשיפה', sec:8, scale:'1',    pp:'pp2' },
+];
+
+function buildDots() {
+  const d = document.getElementById('dots'); d.innerHTML = '';
+  for (let i = 0; i < bTotal; i++) {
+    const e = document.createElement('div');
+    e.className = 'dot'; e.id = 'd' + i; d.appendChild(e);
+  }
+}
+function runRound() {
+  if (bRound >= bTotal) { stopBreath(); return; }
+  const de = document.getElementById('d' + bRound); if (de) de.classList.add('done');
+  runPhase(0, () => { bRound++; runRound(); });
+}
+function runPhase(idx, done) {
+  if (idx >= bPh.length) { done(); return; }
+  const p = bPh[idx];
+  document.getElementById('b-lbl').textContent = p.lbl;
+  document.getElementById('b-ring').style.transform = 'scale(' + p.scale + ')';
+  bPh.forEach((_, i) => {
+    const el = document.getElementById(bPh[i].pp); if (el) el.classList.toggle('on', i === idx);
+  });
+  let s = p.sec;
+  document.getElementById('b-num').textContent = s;
+  clearInterval(bTimer);
+  bTimer = setInterval(() => {
+    s--;
+    document.getElementById('b-num').textContent = Math.max(0, s);
+    if (s <= 0) { clearInterval(bTimer); runPhase(idx + 1, done); }
+  }, 1000);
+}
+function stopBreath() {
+  clearInterval(bTimer);
+  saveSession(3); // save ~3 min session
+  showToast('✓ אימון הושלם! כל הכבוד');
+  go('s-home');
+}
+
+// ════════ PLAN TOGGLE ════════
+function setPlan(p) {
+  document.getElementById('ptm').classList.toggle('on', p === 'm');
+  document.getElementById('pty').classList.toggle('on', p === 'y');
+  if (p === 'm') {
+    document.getElementById('pbig').textContent  = '₪34';
+    document.getElementById('pnote').textContent = 'חיוב חודשי · ביטול בכל עת';
+    document.getElementById('ptrial').textContent= 'ללא חיוב ל-7 ימים · אחר כך ₪34/חודש';
+  } else {
+    document.getElementById('pbig').textContent  = '₪19';
+    document.getElementById('pnote').textContent = 'חיוב של ₪229/שנה · ביטול בכל עת';
+    document.getElementById('ptrial').textContent= 'ללא חיוב היום · חסוך ₪179 לעומת חודשי';
+  }
+}
+</script>
+</body>
+</html>
