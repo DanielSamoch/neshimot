@@ -682,7 +682,7 @@
           <button style="background:none;border:none;cursor:pointer;color:#6b6480;font-size:20px;padding:0" onclick="go('s-home')"><i class="ti ti-arrow-left" style="transform:scaleX(-1);display:inline-block"></i></button>
           <div class="serif" style="font-size:22px;color:#e8e6f0">כל הטכניקות</div>
         </div>
-        <div style="font-size:13px;color:#6b6480;margin-bottom:20px;padding-right:30px">שדרג ל-Pro לגישה לכל 12</div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:20px;padding-right:30px">שדרג ל-Pro לגישה לכל 9 הטכניקות</div>
         <div class="tr free" onclick="startTech('4-7-8')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">נשימת 4-7-8</div><div class="tr-desc">הרגעה · חרדה · לפני שינה</div></div><div class="tr-right"><div class="tr-dur">3 דק׳</div><div class="free-tag">חינם</div></div></div>
         <div class="tr free" onclick="startTech('box')"><div class="tr-ico"><i class="ti ti-square"></i></div><div class="tr-body"><div class="tr-name">Box Breathing</div><div class="tr-desc">מיקוד · סטרס · Navy SEALs</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="free-tag">חינם</div></div></div>
         <div class="tr free" onclick="startTech('belly')"><div class="tr-ico"><i class="ti ti-wind"></i></div><div class="tr-body"><div class="tr-name">נשימת בטן</div><div class="tr-desc">מתחילים · בסיסי · איפוס יומי</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
@@ -694,7 +694,7 @@
         <div class="tr" onclick="startProTech('cardiac')"><div class="tr-ico"><i class="ti ti-heart"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות לבבית</div><div class="tr-desc">לחץ דם · אריכות ימים</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag" id="lock-cardiac"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
         <div class="unlock-ban" onclick="go('s-pro')" style="margin-top:14px">
           <div class="ub-ico"><i class="ti ti-crown"></i></div>
-          <div style="flex:1;text-align:right"><div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">פתח את כל 12 הטכניקות</div><div style="font-size:12px;color:#4a7a60">התחל ניסיון חינם 7 ימים ←</div></div>
+          <div style="flex:1;text-align:right"><div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">פתח את כל 9 הטכניקות</div><div style="font-size:12px;color:#4a7a60">התחל ניסיון חינם 7 ימים ←</div></div>
         </div>
       </div>
     </div>
@@ -772,7 +772,7 @@
             <i class="ti ti-crown" style="font-size:26px;color:#5DCAA5"></i>
           </div>
           <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:6px">Neshimot <span class="teal-lt">Pro</span></div>
-          <div style="font-size:13px;color:#6b6480;line-height:1.7">פתח 6 טכניקות נשימה מתקדמות.<br>נסה בחינם 7 ימים.</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.7">פתח 6 טכניקות נשימה נוספות.<br>נסה בחינם 7 ימים.</div>
         </div>
 
         <div class="plan-toggle" style="margin:0 16px 16px">
@@ -780,8 +780,8 @@
           <button class="pt-tab on" id="pty" onclick="setPlan('y')">שנתי<span class="save-pill">חסוך ₪29</span></button>
         </div>
         <div style="text-align:center;margin-bottom:18px">
-          <span class="serif" style="font-size:44px;color:#e8e6f0" id="pbig">₪17</span>
-          <span style="font-size:14px;color:#6b6480"> / חודש</span>
+          <span class="serif" style="font-size:44px;color:#e8e6f0" id="pbig">₪199</span>
+          <span style="font-size:14px;color:#6b6480"> / שנה</span>
           <div style="font-size:12px;color:#4a4460;margin-top:4px" id="pnote">חיוב של ₪199/שנה · ביטול בכל עת</div>
         </div>
 
@@ -804,7 +804,7 @@
         <div style="padding:0 16px 10px">
           <button class="btn btn-primary" onclick="doStripeCheckout()" id="stripe-btn">התחל ניסיון חינם ל-7 ימים</button>
         </div>
-        <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">ללא חיוב היום · בטל לפני סיום הניסיון</div>
+        <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">חסוך ₪29 לעומת חודשי</div>
 
       </div>
     </div>
@@ -1423,13 +1423,17 @@ function setPlan(p) {
   document.getElementById('ptm').classList.toggle('on', p === 'm');
   document.getElementById('pty').classList.toggle('on', p === 'y');
   if (p === 'm') {
+  if (p === 'm') {
     document.getElementById('pbig').textContent  = '₪19';
     document.getElementById('pnote').textContent = 'חיוב חודשי · ביטול בכל עת';
     document.getElementById('ptrial').textContent= 'ללא חיוב ל-7 ימים · אחר כך ₪19/חודש';
+    document.querySelector('#pbig + span').textContent = ' / חודש';
   } else {
-    document.getElementById('pbig').textContent  = '₪17';
+    document.getElementById('pbig').textContent  = '₪199';
     document.getElementById('pnote').textContent = 'חיוב של ₪199/שנה · ביטול בכל עת';
-    document.getElementById('ptrial').textContent= 'ללא חיוב היום · חסוך ₪29 לעומת חודשי';
+    document.getElementById('ptrial').textContent= 'חסוך ₪29 לעומת חודשי';
+    document.querySelector('#pbig + span').textContent = ' / שנה';
+  }
   }
 }
 </script>
