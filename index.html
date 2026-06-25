@@ -720,25 +720,25 @@
           <div id="mood-quiz">
             <div style="font-size:13px;color:#9992b0;margin-bottom:10px">בחר את מה שמתאר אותך הכי טוב:</div>
             <div style="display:flex;flex-direction:column;gap:8px" id="mood-options">
-              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'לחץ')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
-                <span style="font-size:18px">😤</span>
-                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">לחץ ועומס</div><div style="font-size:11px;color:#6b6480">הרגשה של צפי ומתח</div></div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'לחץ')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">לחץ ועומס</div><div style="font-size:11px;color:#6b6480">הרגשה של צפי ומתח</div></div>
+                <span style="font-size:20px;flex-shrink:0">😤</span>
               </div>
-              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'חרדה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
-                <span style="font-size:18px">😰</span>
-                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">חרדה ודאגה</div><div style="font-size:11px;color:#6b6480">מחשבות מטרידות וחוסר שקט</div></div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'חרדה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">חרדה ודאגה</div><div style="font-size:11px;color:#6b6480">מחשבות מטרידות וחוסר שקט</div></div>
+                <span style="font-size:20px;flex-shrink:0">😰</span>
               </div>
-              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'עייפות')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
-                <span style="font-size:18px">😴</span>
-                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">עייפות וחוסר אנרגיה</div><div style="font-size:11px;color:#6b6480">קשה להתרכז ולהניע את עצמך</div></div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'עייפות')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">עייפות וחוסר אנרגיה</div><div style="font-size:11px;color:#6b6480">קשה להתרכז ולהניע את עצמך</div></div>
+                <span style="font-size:20px;flex-shrink:0">😴</span>
               </div>
-              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'מיקוד')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
-                <span style="font-size:18px">🎯</span>
-                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">רוצה להתמקד</div><div style="font-size:11px;color:#6b6480">צריך חדות ובהירות מחשבתית</div></div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'מיקוד')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">רוצה להתמקד</div><div style="font-size:11px;color:#6b6480">צריך חדות ובהירות מחשבתית</div></div>
+                <span style="font-size:20px;flex-shrink:0">🎯</span>
               </div>
-              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'שינה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
-                <span style="font-size:18px">🌙</span>
-                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">קשה לישון</div><div style="font-size:11px;color:#6b6480">מוח לא מצליח להירגע בלילה</div></div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'שינה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">קשה לישון</div><div style="font-size:11px;color:#6b6480">מוח לא מצליח להירגע בלילה</div></div>
+                <span style="font-size:20px;flex-shrink:0">🌙</span>
               </div>
             </div>
           </div>
