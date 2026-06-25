@@ -690,9 +690,9 @@
           <div class="serif" style="font-size:22px;color:#e8e6f0">כל הטכניקות</div>
         </div>
         <div style="font-size:13px;color:#6b6480;margin-bottom:20px;padding-right:30px">שדרג ל-Pro לגישה לכל 12</div>
-        <div class="tr free" onclick="go('s-breathe')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">נשימת 4-7-8</div><div class="tr-desc">הרגעה · חרדה · לפני שינה</div></div><div class="tr-right"><div class="tr-dur">3 דק׳</div><div class="free-tag">חינם</div></div></div>
-        <div class="tr free" onclick="go('s-breathe')"><div class="tr-ico"><i class="ti ti-square"></i></div><div class="tr-body"><div class="tr-name">Box Breathing</div><div class="tr-desc">מיקוד · סטרס · Navy SEALs</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="free-tag">חינם</div></div></div>
-        <div class="tr free" onclick="go('s-breathe')"><div class="tr-ico"><i class="ti ti-wind"></i></div><div class="tr-body"><div class="tr-name">נשימת בטן</div><div class="tr-desc">מתחילים · בסיסי · איפוס יומי</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
+        <div class="tr free" onclick="startTech('4-7-8')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">נשימת 4-7-8</div><div class="tr-desc">הרגעה · חרדה · לפני שינה</div></div><div class="tr-right"><div class="tr-dur">3 דק׳</div><div class="free-tag">חינם</div></div></div>
+        <div class="tr free" onclick="startTech('box')"><div class="tr-ico"><i class="ti ti-square"></i></div><div class="tr-body"><div class="tr-name">Box Breathing</div><div class="tr-desc">מיקוד · סטרס · Navy SEALs</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="free-tag">חינם</div></div></div>
+        <div class="tr free" onclick="startTech('belly')"><div class="tr-ico"><i class="ti ti-wind"></i></div><div class="tr-body"><div class="tr-name">נשימת בטן</div><div class="tr-desc">מתחילים · בסיסי · איפוס יומי</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
         <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-bolt"></i></div><div class="tr-body"><div class="tr-name">שיטת וים הוף</div><div class="tr-desc">אנרגיה · חיסון · קור</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
         <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-wave-sine"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות</div><div class="tr-desc">HRV · בריאות הלב</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
         <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-sun"></i></div><div class="tr-body"><div class="tr-name">ערות בוקר</div><div class="tr-desc">השכמה · ערנות · ללא קפאין</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
@@ -1035,6 +1035,9 @@ sb.auth.getSession().then(({ data: { session } }) => {
   if (session) { loadUserStats(session.user.id); enterApp(); }
 });
 
+// ודא שהמחיר השנתי מוצג כברירת מחדל
+setPlan('y');
+
 // ════════ VALIDATION ════════
 function valReg() {
   const n = document.getElementById('reg-name').value.trim();
@@ -1096,18 +1099,21 @@ let currentTech = '4-7-8';
 function selTc(el) {
   document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
-  // קבל את שם הטכניקה מהכרטיס
   const name = el.querySelector('.tc-name').textContent.trim();
-  if      (name === '4-7-8')     currentTech = '4-7-8';
-  else if (name === 'Box')       currentTech = 'box';
-  else if (name === 'וים הוף')  currentTech = 'wimhof';
-  else if (name === 'קוהרנטיות') currentTech = 'box'; // דומה ל-box
-  else                           currentTech = 'belly';
+  if      (name === '4-7-8')      currentTech = '4-7-8';
+  else if (name === 'Box')        currentTech = 'box';
+  else if (name === 'וים הוף')   currentTech = 'wimhof';
+  else if (name === 'קוהרנטיות') currentTech = 'box';
+  else                            currentTech = 'belly';
 
-  // עדכן כרטיס "האימון של היום"
   const tech = TECHNIQUES[currentTech];
   document.querySelector('.t-name').textContent = tech.name;
   document.querySelector('.t-desc').textContent = `${tech.sub} · ${tech.rounds} סבבים · ~${tech.mins} דקות`;
+}
+
+function startTech(techKey) {
+  currentTech = techKey;
+  go('s-breathe');
 }
 function selMc(el) { document.querySelectorAll('.mc').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
 function selOb(sel) {
