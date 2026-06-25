@@ -411,7 +411,7 @@
             <i class="ti ti-wind" style="font-size:24px;color:#5DCAA5"></i>
           </div>
           <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px">יצירת חשבון</div>
-          <div style="font-size:13px;color:#6b6480;line-height:1.6">הצטרף ל-12,000+ ישראלים שנושמים טוב יותר</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.6">הצטרף למאות ישראלים שנושמים טוב יותר</div>
         </div>
 
         <button class="btn btn-google" onclick="signInGoogle()">
@@ -641,11 +641,11 @@
 
       <div class="sh" style="margin-top:2px"><span class="sh-lbl">איך אתה מרגיש?</span></div>
       <div class="mood-row">
-        <div class="mc" onclick="selMc(this)">חרד</div>
-        <div class="mc sel" onclick="selMc(this)">לחוץ</div>
-        <div class="mc" onclick="selMc(this)">עייף</div>
-        <div class="mc" onclick="selMc(this)">מבולבל</div>
-        <div class="mc" onclick="selMc(this)">בסדר</div>
+        <div class="mc" onclick="selMc(this,'חרד')">חרד</div>
+        <div class="mc" onclick="selMc(this,'לחוץ')">לחוץ</div>
+        <div class="mc" onclick="selMc(this,'עייף')">עייף</div>
+        <div class="mc" onclick="selMc(this,'מבולבל')">מבולבל</div>
+        <div class="mc sel" onclick="selMc(this,'בסדר')">בסדר</div>
       </div>
 
       <div class="sh"><span class="sh-lbl">הסטטיסטיקות שלך</span></div>
@@ -693,12 +693,12 @@
         <div class="tr free" onclick="startTech('4-7-8')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">נשימת 4-7-8</div><div class="tr-desc">הרגעה · חרדה · לפני שינה</div></div><div class="tr-right"><div class="tr-dur">3 דק׳</div><div class="free-tag">חינם</div></div></div>
         <div class="tr free" onclick="startTech('box')"><div class="tr-ico"><i class="ti ti-square"></i></div><div class="tr-body"><div class="tr-name">Box Breathing</div><div class="tr-desc">מיקוד · סטרס · Navy SEALs</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="free-tag">חינם</div></div></div>
         <div class="tr free" onclick="startTech('belly')"><div class="tr-ico"><i class="ti ti-wind"></i></div><div class="tr-body"><div class="tr-name">נשימת בטן</div><div class="tr-desc">מתחילים · בסיסי · איפוס יומי</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
-        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-bolt"></i></div><div class="tr-body"><div class="tr-name">שיטת וים הוף</div><div class="tr-desc">אנרגיה · חיסון · קור</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
-        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-wave-sine"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות</div><div class="tr-desc">HRV · בריאות הלב</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
-        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-sun"></i></div><div class="tr-body"><div class="tr-name">ערות בוקר</div><div class="tr-desc">השכמה · ערנות · ללא קפאין</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
-        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">ירידה לשינה</div><div class="tr-desc">שינה עמוקה · נדודי שינה</div></div><div class="tr-right"><div class="tr-dur">8 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
-        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-brain"></i></div><div class="tr-body"><div class="tr-name">הולוטרופית</div><div class="tr-desc">עבודה עמוקה · זרימה</div></div><div class="tr-right"><div class="tr-dur">10 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
-        <div class="tr" onclick="go('s-pro')"><div class="tr-ico"><i class="ti ti-heart"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות לבבית</div><div class="tr-desc">לחץ דם · אריכות ימים</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('wimhof')"><div class="tr-ico"><i class="ti ti-bolt"></i></div><div class="tr-body"><div class="tr-name">שיטת וים הוף</div><div class="tr-desc">אנרגיה · חיסון · קור</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag" id="lock-wimhof"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('coherence')"><div class="tr-ico"><i class="ti ti-wave-sine"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות</div><div class="tr-desc">HRV · בריאות הלב</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="pro-tag" id="lock-coherence"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('morning')"><div class="tr-ico"><i class="ti ti-sun"></i></div><div class="tr-body"><div class="tr-name">ערות בוקר</div><div class="tr-desc">השכמה · ערנות · ללא קפאין</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="pro-tag" id="lock-morning"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('sleep')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">ירידה לשינה</div><div class="tr-desc">שינה עמוקה · נדודי שינה</div></div><div class="tr-right"><div class="tr-dur">8 דק׳</div><div class="pro-tag" id="lock-sleep"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('holotropic')"><div class="tr-ico"><i class="ti ti-brain"></i></div><div class="tr-body"><div class="tr-name">הולוטרופית</div><div class="tr-desc">עבודה עמוקה · זרימה</div></div><div class="tr-right"><div class="tr-dur">10 דק׳</div><div class="pro-tag" id="lock-holotropic"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('cardiac')"><div class="tr-ico"><i class="ti ti-heart"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות לבבית</div><div class="tr-desc">לחץ דם · אריכות ימים</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag" id="lock-cardiac"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
         <div class="unlock-ban" onclick="go('s-pro')" style="margin-top:14px">
           <div class="ub-ico"><i class="ti ti-crown"></i></div>
           <div style="flex:1;text-align:right"><div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">פתח את כל 12 הטכניקות</div><div style="font-size:12px;color:#4a7a60">התחל ניסיון חינם 7 ימים ←</div></div>
@@ -745,7 +745,7 @@
             <i class="ti ti-crown" style="font-size:26px;color:#5DCAA5"></i>
           </div>
           <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:6px">Neshimot <span class="teal-lt">Pro</span></div>
-          <div style="font-size:13px;color:#6b6480;line-height:1.7">הצטרף ל-12,000+ ישראלים שנושמים טוב יותר.<br>נסה בחינם 7 ימים.</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.7">פתח 6 טכניקות נשימה מתקדמות.<br>נסה בחינם 7 ימים.</div>
         </div>
 
         <div class="plan-toggle" style="margin:0 16px 16px">
@@ -760,36 +760,41 @@
 
         <div style="padding:0 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
-            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-infinity" style="font-size:15px;color:#5DCAA5"></i></div>
-            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">אימונים ללא הגבלה</div><div style="font-size:12px;color:#4a4460;margin-top:2px">כל 12 הטכניקות, ללא מכסה יומית</div></div>
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-bolt" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">שיטת וים הוף</div><div style="font-size:12px;color:#4a4460;margin-top:2px">אנרגיה · חיזוק חיסוני · חשיפה לקור</div></div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
-            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-brain" style="font-size:15px;color:#5DCAA5"></i></div>
-            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">מאמן AI אישי</div><div style="font-size:12px;color:#4a4460;margin-top:2px">מסתגל לדפוסי הלחץ שלך לאורך זמן</div></div>
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-wave-sine" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">נשימת קוהרנטיות</div><div style="font-size:12px;color:#4a4460;margin-top:2px">איזון HRV ובריאות הלב</div></div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
-            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-chart-line" style="font-size:15px;color:#5DCAA5"></i></div>
-            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">מעקב HRV והתקדמות</div><div style="font-size:12px;color:#4a4460;margin-top:2px">צפה בשיפור מערכת העצבים שבועית</div></div>
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-sun" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">ערות בוקר</div><div style="font-size:12px;color:#4a4460;margin-top:2px">השכמה טבעית וערנות ללא קפאין</div></div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
             <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-moon" style="font-size:15px;color:#5DCAA5"></i></div>
-            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">תוכניות שינה והשכמה</div><div style="font-size:12px;color:#4a4460;margin-top:2px">שגרות מודרכות לבוקר ולילה</div></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">ירידה לשינה</div><div style="font-size:12px;color:#4a4460;margin-top:2px">שינה עמוקה והרגעה לילית</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-brain" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">נשימה הולוטרופית</div><div style="font-size:12px;color:#4a4460;margin-top:2px">מצב זרימה ועבודה עמוקה</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:11px;flex-direction:row-reverse">
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><i class="ti ti-heart" style="font-size:15px;color:#5DCAA5"></i></div>
+            <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#c8c0e0">קוהרנטיות לבבית</div><div style="font-size:12px;color:#4a4460;margin-top:2px">הפחתת לחץ דם ואריכות ימים</div></div>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 16px;direction:ltr">
           <div style="display:flex"><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5">ימ</div><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5;margin-left:-6px">שר</div><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5;margin-left:-6px">אכ</div></div>
-          <span style="font-size:12px;color:#6b6480;font-family:'Heebo',sans-serif"><strong style="color:#9992b0">12,847</strong> חברים · 4.8 <i class="ti ti-star" style="font-size:11px;color:#5DCAA5"></i></span>
+          <span style="font-size:12px;color:#6b6480;font-family:'Heebo',sans-serif"><strong style="color:#9992b0">מאות משתמשים</strong> · 4.8 <i class="ti ti-star" style="font-size:11px;color:#5DCAA5"></i></span>
         </div>
 
         <div style="padding:0 16px 10px">
           <button class="btn btn-primary" onclick="doStripeCheckout()" id="stripe-btn">התחל ניסיון חינם ל-7 ימים</button>
         </div>
         <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">ללא חיוב היום · בטל לפני סיום הניסיון</div>
-        <div style="margin:0 16px;background:#14141c;border:.5px solid #2a2838;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-direction:row-reverse">
-          <i class="ti ti-shield-check" style="font-size:17px;color:#5DCAA5;flex-shrink:0"></i>
-          <p style="font-size:12px;color:#6b6480;line-height:1.5;text-align:right">ערבות 30 יום. לא הרגשת רגוע יותר? החזר מלא, ללא שאלות.</p>
-        </div>
+
       </div>
     </div>
 
@@ -982,6 +987,8 @@ async function loadUserStats(userId) {
     document.getElementById('stat-mins').textContent     = (data.total_mins || 0) + ' דק׳';
     document.getElementById('p-sessions').textContent    = data.sessions  || 0;
     document.getElementById('p-mins').textContent        = data.total_mins|| 0;
+    isPro = data.is_pro || false;
+    updateProUI();
   }
 }
 
@@ -1087,13 +1094,28 @@ function chkStr() {
 // ════════ UI HELPERS ════════
 // טכניקות נשימה
 const TECHNIQUES = {
-  '4-7-8':       { name:'נשימת 4-7-8',      sub:'איפוס מערכת העצבים',      phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:7,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:8,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 7שנ׳','נשיפה 8שנ׳'], rounds:4, mins:3 },
-  'box':         { name:'Box Breathing',      sub:'שליטה בסטרס ומיקוד',      phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:4,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:4,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 4שנ׳','נשיפה 4שנ׳'], rounds:4, mins:4 },
-  'belly':       { name:'נשימת בטן',          sub:'הרגעה בסיסית ויומית',     phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:6,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 4שנ׳','נשיפה 6שנ׳','מנוחה 2שנ׳'],  rounds:5, mins:5 },
-  'wimhof':      { name:'שיטת וים הוף',       sub:'אנרגיה וחיזוק חיסוני',   phases:[{lbl:'שאיפה',sec:2,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:2,scale:'1',pp:'pp1'},{lbl:'עצירה',sec:4,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 2שנ׳','נשיפה 2שנ׳','עצירה 4שנ׳'],  rounds:6, mins:6 },
+  '4-7-8':      { name:'נשימת 4-7-8',      sub:'איפוס מערכת העצבים',    phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:7,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:8,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 7שנ׳','נשיפה 8שנ׳'], rounds:4, mins:3 },
+  'box':        { name:'Box Breathing',     sub:'שליטה בסטרס ומיקוד',   phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:4,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:4,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 4שנ׳','נשיפה 4שנ׳'], rounds:4, mins:4 },
+  'belly':      { name:'נשימת בטן',         sub:'הרגעה בסיסית ויומית',  phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:6,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 4שנ׳','נשיפה 6שנ׳','מנוחה 2שנ׳'],  rounds:5, mins:5 },
+  // Pro
+  'wimhof':     { name:'שיטת וים הוף',      sub:'אנרגיה וחיזוק חיסוני', phases:[{lbl:'שאיפה',sec:2,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:2,scale:'1',pp:'pp1'},{lbl:'עצירה',sec:5,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 2שנ׳','נשיפה 2שנ׳','עצירה 5שנ׳'],  rounds:6, mins:6 },
+  'coherence':  { name:'נשימת קוהרנטיות',   sub:'HRV ובריאות הלב',       phases:[{lbl:'שאיפה',sec:5,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:5,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 5שנ׳','נשיפה 5שנ׳','מנוחה 2שנ׳'],  rounds:5, mins:5 },
+  'morning':    { name:'ערות בוקר',          sub:'השכמה וערנות טבעית',   phases:[{lbl:'שאיפה',sec:3,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:1,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:3,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 3שנ׳','עצירה 1שנ׳','נשיפה 3שנ׳'],  rounds:4, mins:4 },
+  'sleep':      { name:'ירידה לשינה',        sub:'שינה עמוקה ורוגע',     phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:7,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:8,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 7שנ׳','נשיפה 8שנ׳'],  rounds:8, mins:8 },
+  'holotropic': { name:'נשימה הולוטרופית',   sub:'עבודה עמוקה וזרימה',   phases:[{lbl:'שאיפה',sec:2,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:2,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:1,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 2שנ׳','נשיפה 2שנ׳','מנוחה 1שנ׳'],  rounds:10, mins:10 },
+  'cardiac':    { name:'קוהרנטיות לבבית',    sub:'לחץ דם ואריכות ימים',  phases:[{lbl:'שאיפה',sec:5,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:5,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 5שנ׳','נשיפה 5שנ׳','מנוחה 2שנ׳'],  rounds:6, mins:6 },
 };
 
 let currentTech = '4-7-8';
+
+function startProTech(techKey) {
+  if (!isPro) {
+    showToast('🔒 טכניקה זו זמינה ל-Pro בלבד');
+    setTimeout(() => go('s-pro'), 800);
+    return;
+  }
+  startTech(techKey);
+}
 
 function selTc(el) {
   document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel'));
@@ -1114,7 +1136,33 @@ function startTech(techKey) {
   currentTech = techKey;
   go('s-breathe');
 }
-function selMc(el) { document.querySelectorAll('.mc').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
+let currentMood = 'בסדר';
+function selMc(el, mood) {
+  document.querySelectorAll('.mc').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  currentMood = mood;
+  // שמור mood לSession הבא
+  window._nextMood = mood;
+  // עדכן גרף מצבי רוח בעמוד התקדמות
+  updateMoodChart(mood);
+}
+
+function updateMoodChart(mood) {
+  const moodMap = {
+    'חרד':    { calm:20, focus:30, stress:80 },
+    'לחוץ':   { calm:30, focus:40, stress:70 },
+    'עייף':   { calm:40, focus:25, stress:50 },
+    'מבולבל': { calm:35, focus:20, stress:55 },
+    'בסדר':   { calm:72, focus:55, stress:30 },
+  };
+  const vals = moodMap[mood] || moodMap['בסדר'];
+  // עדכן באנימציה
+  const bars = document.querySelectorAll('.mh-bar');
+  const pcts = document.querySelectorAll('.mh-row div:last-child');
+  if (bars[0]) { bars[0].style.width = vals.calm + '%'; if(pcts[0]) pcts[0].textContent = vals.calm + '%'; }
+  if (bars[1]) { bars[1].style.width = vals.focus + '%'; if(pcts[1]) pcts[1].textContent = vals.focus + '%'; }
+  if (bars[2]) { bars[2].style.width = vals.stress + '%'; if(pcts[2]) pcts[2].textContent = vals.stress + '%'; }
+}
 function selOb(sel) {
   return function(el) {
     document.querySelectorAll(sel).forEach(c => c.classList.remove('sel'));
@@ -1192,23 +1240,19 @@ function stopBreath() {
 
 // ════════ PROGRESS CHART — נתונים אמיתיים ════════
 async function loadWeekChart(userId) {
-  const days = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
   const today = new Date();
-  // בנה 7 ימים אחרונים
-  const weekDays = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    weekDays.push(d);
-  }
+  today.setHours(23,59,59,999);
+  const since = new Date(today);
+  since.setDate(today.getDate() - 6);
+  since.setHours(0,0,0,0);
 
   // קח sessions מ-Supabase של 7 ימים אחרונים
-  const since = new Date(today); since.setDate(today.getDate() - 6);
   const { data: sessions } = await sb
     .from('sessions')
     .select('created_at, duration_mins')
     .eq('user_id', userId)
-    .gte('created_at', since.toISOString());
+    .gte('created_at', since.toISOString())
+    .lte('created_at', today.toISOString());
 
   // מפה של תאריך → דקות
   const dayMap = {};
@@ -1218,44 +1262,73 @@ async function loadWeekChart(userId) {
   });
 
   const maxMins = Math.max(...Object.values(dayMap), 1);
-  let activeDays = 0;
-  let weekMins = 0;
-  let weekSessions = 0;
+  let activeDays = 0, weekMins = 0, weekSessions = 0;
+  const dayLabels = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
 
   const container = document.getElementById('week-row');
   container.innerHTML = '';
 
-  weekDays.forEach((d, i) => {
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
     const dateStr = d.toISOString().split('T')[0];
     const mins = dayMap[dateStr] || 0;
-    const isToday = i === 6;
-    const hasSessions = mins > 0;
-    if (hasSessions) { activeDays++; weekMins += mins; weekSessions++; }
+    const isToday = i === 0;
+    if (mins > 0) { activeDays++; weekMins += mins; weekSessions++; }
 
-    const pct = hasSessions ? Math.max((mins / maxMins) * 100, 15) : 0;
-    const dayName = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'][d.getDay() === 0 ? 6 : d.getDay() - 1];
+    const pct = mins > 0 ? Math.max((mins / maxMins) * 100, 15) : 0;
+    const dayIdx = d.getDay(); // 0=ראשון
+    const dayName = dayLabels[dayIdx === 0 ? 6 : dayIdx - 1];
 
     const col = document.createElement('div');
     col.className = 'day-col';
     col.innerHTML = `
       <div class="day-bg">
-        ${hasSessions ? `<div class="day-bar" style="height:${pct}%"></div>` : ''}
+        ${mins > 0 ? `<div class="day-bar" style="height:${pct}%"></div>` : ''}
       </div>
-      <div class="day-lbl" style="${isToday ? 'color:#5DCAA5' : ''}">${dayName}</div>
-      <div class="day-dot ${hasSessions ? 'done' : ''}"></div>
+      <div class="day-lbl" style="${isToday ? 'color:#5DCAA5;font-weight:500' : ''}">${dayName}</div>
+      <div class="day-dot ${mins > 0 ? 'done' : ''}"></div>
     `;
     container.appendChild(col);
-  });
+  }
 
-  // עדכן כותרת
   document.getElementById('prog-subtitle').textContent = `השבוע · ${activeDays} מתוך 7 ימים`;
   if (weekSessions > 0) {
     document.getElementById('p-sessions-week').textContent = `+${weekSessions} השבוע`;
-    document.getElementById('p-mins-week').textContent = `+${weekMins} השבוע`;
+    document.getElementById('p-mins-week').textContent = `+${weekMins} דק׳ השבוע`;
+  } else {
+    document.getElementById('p-sessions-week').textContent = 'התחל היום!';
+    document.getElementById('p-mins-week').textContent = 'התחל היום!';
   }
 }
 
-// ════════ PLAN TOGGLE ════════
+// ════════ PRO STATUS ════════
+let isPro = false;
+
+async function checkProStatus(userId) {
+  const { data } = await sb.from('profiles').select('is_pro').eq('id', userId).single();
+  isPro = data?.is_pro || false;
+  updateProUI();
+}
+
+function updateProUI() {
+  // הצג/הסתר תוכן Pro בכל האפליקציה
+  document.querySelectorAll('.pro-locked').forEach(el => {
+    el.style.opacity = isPro ? '1' : '0.5';
+    el.style.pointerEvents = isPro ? 'auto' : 'none';
+  });
+  document.querySelectorAll('.pro-lock-icon').forEach(el => {
+    el.style.display = isPro ? 'none' : 'flex';
+  });
+  // עדכן מסך Pro
+  const proBtn = document.getElementById('stripe-btn');
+  if (proBtn && isPro) {
+    proBtn.textContent = '✓ אתה כבר Pro!';
+    proBtn.style.background = '#0d2820';
+    proBtn.style.color = '#5DCAA5';
+    proBtn.disabled = true;
+  }
+}
 function setPlan(p) {
   document.getElementById('ptm').classList.toggle('on', p === 'm');
   document.getElementById('pty').classList.toggle('on', p === 'y');
