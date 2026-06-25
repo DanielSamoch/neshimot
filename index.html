@@ -723,10 +723,44 @@
           <div class="bstat"><div class="bsn" id="p-mins">0</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">דקות</div><div style="font-size:12px;color:#6b6480">של נשימה</div><div class="bst" id="p-mins-week"></div></div>
         </div>
         <div class="card" style="margin-bottom:16px">
-          <div style="font-size:12px;color:#6b6480;margin-bottom:12px">התפלגות מצבי רוח</div>
-          <div class="mh-row"><div class="mh-lbl">רוגע</div><div class="mh-bg"><div class="mh-bar" style="width:72%"></div></div><div style="font-size:11px;color:#4a4460;width:28px;text-align:left">72%</div></div>
-          <div class="mh-row"><div class="mh-lbl">מיקוד</div><div class="mh-bg"><div class="mh-bar" style="width:55%;background:#85B7EB"></div></div><div style="font-size:11px;color:#4a4460;width:28px;text-align:left">55%</div></div>
-          <div class="mh-row"><div class="mh-lbl">לחץ</div><div class="mh-bg"><div class="mh-bar" style="width:30%;background:#EF9F27"></div></div><div style="font-size:11px;color:#4a4460;width:28px;text-align:left">30%</div></div>
+          <div style="font-size:12px;color:#6b6480;margin-bottom:12px">איך הרגשת השבוע?</div>
+          <div id="mood-quiz">
+            <div style="font-size:13px;color:#9992b0;margin-bottom:10px">בחר את מה שמתאר אותך הכי טוב:</div>
+            <div style="display:flex;flex-direction:column;gap:8px" id="mood-options">
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'לחץ')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
+                <span style="font-size:18px">😤</span>
+                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">לחץ ועומס</div><div style="font-size:11px;color:#6b6480">הרגשה של צפי ומתח</div></div>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'חרדה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
+                <span style="font-size:18px">😰</span>
+                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">חרדה ודאגה</div><div style="font-size:11px;color:#6b6480">מחשבות מטרידות וחוסר שקט</div></div>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'עייפות')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
+                <span style="font-size:18px">😴</span>
+                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">עייפות וחוסר אנרגיה</div><div style="font-size:11px;color:#6b6480">קשה להתרכז ולהניע את עצמך</div></div>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'מיקוד')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
+                <span style="font-size:18px">🎯</span>
+                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">רוצה להתמקד</div><div style="font-size:11px;color:#6b6480">צריך חדות ובהירות מחשבתית</div></div>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'שינה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s">
+                <span style="font-size:18px">🌙</span>
+                <div style="text-align:right"><div style="font-size:13px;font-weight:500;color:#e8e6f0">קשה לישון</div><div style="font-size:11px;color:#6b6480">מוח לא מצליח להירגע בלילה</div></div>
+              </div>
+            </div>
+          </div>
+          <div id="mood-recommendation" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-direction:row-reverse">
+              <div style="width:32px;height:32px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0" id="rec-icon"></div>
+              <div style="text-align:right">
+                <div style="font-size:11px;color:#5DCAA5;margin-bottom:2px">המלצה עבורך</div>
+                <div style="font-size:14px;font-weight:500;color:#e8e6f0" id="rec-title"></div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:#9992b0;line-height:1.6;margin-bottom:12px" id="rec-desc"></div>
+            <button onclick="startRecommended()" class="btn btn-primary" style="margin:0;padding:10px;font-size:13px">התחל עכשיו ←</button>
+            <div style="text-align:center;margin-top:8px"><span onclick="resetMoodQuiz()" style="font-size:12px;color:#4a4460;cursor:pointer">שאלון מחדש</span></div>
+          </div>
         </div>
         <div class="card-green card">
           <div style="font-size:10px;color:#5DCAA5;letter-spacing:.04em;margin-bottom:6px">תובנת מאמן AI</div>
@@ -979,12 +1013,35 @@ async function loadUserStats(userId) {
 async function saveSession(mins) {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
+
+  // 1. הוסף session לטבלת sessions עם תאריך מדויק
+  await sb.from('sessions').insert({
+    user_id:      user.id,
+    technique:    currentTech,
+    duration_mins: mins,
+    mood_before:  currentMood || 'בסדר',
+    created_at:   new Date().toISOString()
+  });
+
+  // 2. עדכן סטטיסטיקות בפרופיל
   const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
   if (profile) {
+    // חשב streak — בדוק אם תירגל אתמול
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split('T')[0];
+    const { data: ySessions } = await sb.from('sessions')
+      .select('id').eq('user_id', user.id)
+      .gte('created_at', yStr + 'T00:00:00')
+      .lte('created_at', yStr + 'T23:59:59');
+    const newStreak = (ySessions && ySessions.length > 0)
+      ? (profile.streak || 0) + 1
+      : 1;
+
     await sb.from('profiles').update({
-      sessions:   (profile.sessions   || 0) + 1,
-      streak:     (profile.streak     || 0) + 1,
-      total_mins: (profile.total_mins || 0) + mins
+      sessions:    (profile.sessions   || 0) + 1,
+      streak:      newStreak,
+      total_mins:  (profile.total_mins || 0) + mins
     }).eq('id', user.id);
     await loadUserStats(user.id);
   }
@@ -1284,6 +1341,62 @@ async function loadWeekChart(userId) {
     document.getElementById('p-sessions-week').textContent = 'התחל היום!';
     document.getElementById('p-mins-week').textContent = 'התחל היום!';
   }
+}
+
+// ════════ MOOD QUIZ ════════
+const MOOD_RECS = {
+  'לחץ':    { tech:'4-7-8',     icon:'ti ti-moon',     title:'נשימת 4-7-8',       desc:'הכי יעילה להפחתת לחץ מיידי. הנשיפה הארוכה מפעילה את מערכת הרגיעה ומורידה קורטיזול תוך 3 דקות.' },
+  'חרדה':   { tech:'box',       icon:'ti ti-square',   title:'Box Breathing',      desc:'הטכניקה שמשתמשים בה Navy SEALs לפני מצבי לחץ קיצוני. מאזנת את הנשימה ומורידה את דופק הלב.' },
+  'עייפות': { tech:'wimhof',    icon:'ti ti-bolt',     title:'שיטת וים הוף',       desc:'נשימות כוח שמציפות את הגוף בחמצן ונותנות אנרגיה טבעית תוך דקות. עדיפה על קפה.', pro:true },
+  'מיקוד':  { tech:'coherence', icon:'ti ti-wave-sine',title:'נשימת קוהרנטיות',    desc:'5 שניות שאיפה, 5 שניות נשיפה — מסנכרנת את הלב והמוח ומשפרת ריכוז ויכולת קבלת החלטות.', pro:true },
+  'שינה':   { tech:'sleep',     icon:'ti ti-moon',     title:'ירידה לשינה',        desc:'גרסה מורחבת של 4-7-8 שמכניסה את הגוף למצב שינה. עשה אותה במיטה בחושך.', pro:true },
+};
+
+let recommendedTech = null;
+
+function selectMoodQuiz(el, mood) {
+  document.querySelectorAll('.mood-quiz-opt').forEach(o => {
+    o.style.borderColor = '#2a2838';
+    o.style.background = '#14141c';
+  });
+  el.style.borderColor = '#1D9E75';
+  el.style.background = '#0d2820';
+
+  const rec = MOOD_RECS[mood];
+  recommendedTech = rec.tech;
+
+  document.getElementById('rec-icon').innerHTML = `<i class="${rec.icon}" style="font-size:15px;color:#5DCAA5"></i>`;
+  document.getElementById('rec-title').textContent = rec.title;
+  document.getElementById('rec-desc').textContent = rec.desc + (rec.pro && !isPro ? ' (דורש Pro)' : '');
+
+  setTimeout(() => {
+    document.getElementById('mood-quiz').style.display = 'none';
+    document.getElementById('mood-recommendation').style.display = 'block';
+  }, 300);
+
+  // עדכן mood גם בבית
+  currentMood = mood;
+  window._nextMood = mood;
+}
+
+function startRecommended() {
+  if (!recommendedTech) return;
+  const rec = MOOD_RECS[Object.keys(MOOD_RECS).find(k => MOOD_RECS[k].tech === recommendedTech)];
+  if (rec?.pro && !isPro) {
+    showToast('🔒 טכניקה זו זמינה ל-Pro בלבד');
+    setTimeout(() => go('s-pro'), 800);
+    return;
+  }
+  startTech(recommendedTech);
+}
+
+function resetMoodQuiz() {
+  document.getElementById('mood-quiz').style.display = 'block';
+  document.getElementById('mood-recommendation').style.display = 'none';
+  document.querySelectorAll('.mood-quiz-opt').forEach(o => {
+    o.style.borderColor = '#2a2838';
+    o.style.background = '#14141c';
+  });
 }
 
 // ════════ PRO STATUS ════════
