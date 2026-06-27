@@ -257,7 +257,20 @@
     .sl { font-size: 11px; color: #6b6480; margin-top: 2px; }
 
     /* ── BREATHE SCREEN ── */
-    .ring-wrap { display: flex; justify-content: center; margin-bottom: 24px; }
+    .ring-wrap { display: flex; justify-content: center; margin-bottom: 24px; position: relative; }
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid;
+      animation: ripple-out 1.8s ease-out forwards;
+      pointer-events: none;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    @keyframes ripple-out {
+      from { width: 176px; height: 176px; opacity: 0.6; }
+      to   { width: 320px; height: 320px; opacity: 0; }
+    }
     .b-ring {
       width: 180px; height: 180px; border-radius: 50%;
       border: 1.5px solid #2a5a4a; background: #0d2820;
@@ -852,6 +865,20 @@
 
 
 
+        <!-- שעת תזכורת -->
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:6px">תזכורת יומית</label>
+          <div style="display:flex;align-items:center;gap:12px;flex-direction:row-reverse">
+            <div style="flex:1;position:relative">
+              <input class="inp" id="reminder-time" type="time" value="08:00" style="text-align:center;direction:ltr;cursor:pointer">
+            </div>
+            <div id="reminder-toggle" onclick="toggleReminder()" style="width:48px;height:28px;border-radius:14px;background:#2a2838;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s">
+              <div id="reminder-thumb" style="width:22px;height:22px;border-radius:50%;background:#e8e6f0;position:absolute;top:3px;right:3px;transition:transform .2s"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#4a4460;margin-top:6px;text-align:right" id="reminder-status">התראה כבויה</div>
+        </div>
+
         <button class="btn btn-primary" onclick="saveSettings()">שמור</button>
 
         <!-- כפתור Pro -->
@@ -927,10 +954,24 @@ function go(id) {
   }
 }
 
+function spawnRipple(phase) {
+  const wrap = document.querySelector('.ring-wrap');
+  if (!wrap) return;
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  if (phase === 'שאיפה')  r.style.borderColor = '#1D9E75';
+  else if (phase === 'עצירה') r.style.borderColor = '#378ADD';
+  else if (phase === 'נשיפה') r.style.borderColor = '#7F77DD';
+  else r.style.borderColor = '#2a5a4a';
+  wrap.appendChild(r);
+  setTimeout(() => r.remove(), 1800);
+}
+
 function enterApp() {
   document.getElementById('nav-bar').classList.add('visible');
   loadSettings();
   checkOwnerAccess();
+  loadReminderSettings();
   go('s-home');
 }
 
@@ -1324,6 +1365,34 @@ function runPhase(idx, done) {
   const phases = window._bPh || bPh;
   if (idx >= phases.length) { done(); return; }
   const p = phases[idx];
+
+  // צבע לפי שלב
+  const ring = document.getElementById('b-ring');
+  const lbl  = document.getElementById('b-lbl');
+  if (p.lbl === 'שאיפה') {
+    ring.style.borderColor     = '#1D9E75';
+    ring.style.background      = '#0d2820';
+    lbl.style.color            = '#5DCAA5';
+  } else if (p.lbl === 'עצירה') {
+    ring.style.borderColor     = '#378ADD';
+    ring.style.background      = '#0d1a2a';
+    lbl.style.color            = '#85B7EB';
+  } else if (p.lbl === 'נשיפה') {
+    ring.style.borderColor     = '#7F77DD';
+    ring.style.background      = '#1a0d2a';
+    lbl.style.color            = '#AFA9EC';
+  } else {
+    ring.style.borderColor     = '#2a5a4a';
+    ring.style.background      = '#0d2820';
+    lbl.style.color            = '#5DCAA5';
+  }
+
+  // מעגלים מתפשטים
+  spawnRipple(p.lbl);
+
+  // צליל
+  playPhaseSound(p.lbl);
+
   document.getElementById('b-lbl').textContent = p.lbl;
   document.getElementById('b-ring').style.transform = 'scale(' + p.scale + ')';
   phases.forEach((_, i) => {
@@ -1410,6 +1479,119 @@ async function loadWeekChart(userId) {
   }
 }
 
+// ════════ REMINDER / NOTIFICATIONS ════════
+let reminderEnabled = false;
+let reminderTimer   = null;
+
+function toggleReminder() {
+  reminderEnabled = !reminderEnabled;
+  const tog   = document.getElementById('reminder-toggle');
+  const thumb = document.getElementById('reminder-thumb');
+  const status = document.getElementById('reminder-status');
+  if (reminderEnabled) {
+    tog.style.background   = '#1D9E75';
+    thumb.style.transform  = 'translateX(-20px)';
+    const time = document.getElementById('reminder-time').value || '08:00';
+    status.textContent = `תזכורת יומית בשעה ${time}`;
+    status.style.color = '#5DCAA5';
+    requestNotificationPermission();
+  } else {
+    tog.style.background  = '#2a2838';
+    thumb.style.transform = 'translateX(0)';
+    status.textContent    = 'התראה כבויה';
+    status.style.color    = '#4a4460';
+    if (reminderTimer) clearTimeout(reminderTimer);
+  }
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    showToast('הדפדפן לא תומך בהתראות');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    showToast('✓ התראות אופשרו');
+    scheduleReminder();
+  } else {
+    showToast('אפשר התראות בהגדרות הדפדפן');
+    reminderEnabled = false;
+    toggleReminder();
+  }
+}
+
+function scheduleReminder() {
+  if (reminderTimer) clearTimeout(reminderTimer);
+  const timeVal = document.getElementById('reminder-time').value || '08:00';
+  const [h, m]  = timeVal.split(':').map(Number);
+  const now     = new Date();
+  const target  = new Date();
+  target.setHours(h, m, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  const ms = target - now;
+  reminderTimer = setTimeout(() => {
+    const name = userName ? `, ${userName}` : '';
+    new Notification(`זמן לנשום${name} 🌬️`, {
+      body: 'לחץ להתחיל session של 3 דקות',
+      icon: '/favicon.ico'
+    });
+    scheduleReminder(); // קבע למחרת
+  }, ms);
+}
+
+function loadReminderSettings() {
+  const enabled = localStorage.getItem('neshimot_reminder') === 'true';
+  const time    = localStorage.getItem('neshimot_reminder_time') || '08:00';
+  const timeInput = document.getElementById('reminder-time');
+  if (timeInput) timeInput.value = time;
+  if (enabled) {
+    reminderEnabled = false; // כדי ש-toggle יפעיל
+    toggleReminder();
+  }
+}
+
+// ════════ SOUNDS ════════
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, vol = 0.15) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playPhaseSound(phase) {
+  if (phase === 'שאיפה') {
+    // קינג׳ עולה — ירוק
+    playTone(528, 'sine', 0.6, 0.12);
+    setTimeout(() => playTone(660, 'sine', 0.4, 0.08), 200);
+  } else if (phase === 'עצירה') {
+    // צליל יציב — כחול
+    playTone(432, 'sine', 0.5, 0.08);
+  } else if (phase === 'נשיפה') {
+    // שוממ יורד — סגול
+    playTone(396, 'sine', 0.8, 0.1);
+    setTimeout(() => playTone(320, 'sine', 0.6, 0.08), 300);
+  } else if (phase === 'מנוחה') {
+    playTone(256, 'sine', 0.4, 0.06);
+  }
+}
+
 // ════════ SETTINGS ════════
 let userGender = 'male';
 let userName   = '';
@@ -1439,7 +1621,13 @@ function previewGreeting() {
 
 async function saveSettings() {
   const name = document.getElementById('settings-name').value.trim();
+  const time = document.getElementById('reminder-time').value || '08:00';
   userName   = name;
+
+  // שמור תזכורת
+  localStorage.setItem('neshimot_reminder',      reminderEnabled ? 'true' : 'false');
+  localStorage.setItem('neshimot_reminder_time', time);
+  if (reminderEnabled) scheduleReminder();
 
   // שמור ב-Supabase
   const { data: { user } } = await sb.auth.getUser();
@@ -1450,7 +1638,6 @@ async function saveSettings() {
     }).eq('id', user.id);
   }
 
-  // שמור ב-localStorage לטעינה מהירה
   localStorage.setItem('neshimot_name',   name);
   localStorage.setItem('neshimot_gender', userGender);
 
