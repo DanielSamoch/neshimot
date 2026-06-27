@@ -775,14 +775,14 @@
           <div style="font-size:13px;color:#6b6480;line-height:1.7">פתח 6 טכניקות נשימה נוספות.<br>נסה בחינם 7 ימים.</div>
         </div>
 
-        <div class="plan-toggle" style="margin:0 16px 16px">
-          <button class="pt-tab" id="ptm" onclick="setPlan('m')">חודשי</button>
+        <div class="plan-toggle" style="margin:0 16px 16px;direction:rtl">
           <button class="pt-tab on" id="pty" onclick="setPlan('y')">שנתי<span class="save-pill">חסוך ₪29</span></button>
+          <button class="pt-tab" id="ptm" onclick="setPlan('m')">חודשי</button>
         </div>
         <div style="text-align:center;margin-bottom:18px">
           <span class="serif" style="font-size:44px;color:#e8e6f0" id="pbig">₪199</span>
-          <span style="font-size:14px;color:#6b6480"> / שנה</span>
-          <div style="font-size:12px;color:#4a4460;margin-top:4px" id="pnote">חיוב של ₪199/שנה · ביטול בכל עת</div>
+          <span style="font-size:14px;color:#6b6480" id="price-period"> / שנה</span>
+          <div style="font-size:12px;color:#4a4460;margin-top:4px" id="pnote">חיסכון של ₪29 לעומת חודשי</div>
         </div>
 
         <div style="padding:0 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px">
@@ -804,7 +804,7 @@
         <div style="padding:0 16px 10px">
           <button class="btn btn-primary" onclick="doStripeCheckout()" id="stripe-btn">התחל ניסיון חינם ל-7 ימים</button>
         </div>
-        <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">חסוך ₪29 לעומת חודשי</div>
+        <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">ללא חיוב ל-7 ימים ניסיון</div>
 
       </div>
     </div>
@@ -1565,17 +1565,15 @@ function setPlan(p) {
   document.getElementById('ptm').classList.toggle('on', p === 'm');
   document.getElementById('pty').classList.toggle('on', p === 'y');
   if (p === 'm') {
-  if (p === 'm') {
-    document.getElementById('pbig').textContent  = '₪19';
-    document.getElementById('pnote').textContent = 'חיוב חודשי · ביטול בכל עת';
-    document.getElementById('ptrial').textContent= 'ללא חיוב ל-7 ימים · אחר כך ₪19/חודש';
-    document.querySelector('#pbig + span').textContent = ' / חודש';
+    document.getElementById('pbig').textContent          = '₪19';
+    document.getElementById('price-period').textContent  = ' / חודש';
+    document.getElementById('pnote').textContent         = 'חיוב חודשי · ביטול בכל עת';
+    document.getElementById('ptrial').textContent        = 'ללא חיוב ל-7 ימים ניסיון';
   } else {
-    document.getElementById('pbig').textContent  = '₪199';
-    document.getElementById('pnote').textContent = 'חיוב של ₪199/שנה · ביטול בכל עת';
-    document.getElementById('ptrial').textContent= 'חסוך ₪29 לעומת חודשי';
-    document.querySelector('#pbig + span').textContent = ' / שנה';
-  }
+    document.getElementById('pbig').textContent          = '₪199';
+    document.getElementById('price-period').textContent  = ' / שנה';
+    document.getElementById('pnote').textContent         = 'חיסכון של ₪29 לעומת חודשי';
+    document.getElementById('ptrial').textContent        = 'ללא חיוב ל-7 ימים ניסיון';
   }
 }
 </script>
