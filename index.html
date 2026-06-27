@@ -388,7 +388,7 @@
     <!-- ════════════════════════════════
          SPLASH
     ════════════════════════════════ -->
-    <div class="scr" id="s-splash" style="display:none">
+    <div class="scr on" id="s-splash">
       <div style="min-height:650px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;background:radial-gradient(ellipse at 50% 35%,#0d2820 0%,#0c0c0f 68%)">
         <div style="width:84px;height:84px;border-radius:26px;background:#0d2820;border:1.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 22px">
           <i class="ti ti-wind" style="font-size:40px;color:#5DCAA5"></i>
@@ -1146,11 +1146,8 @@ sb.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     loadUserStats(session.user.id);
     enterApp();
-  } else {
-    // אין session — הצג splash
-    document.getElementById('s-splash').style.display = 'block';
-    document.getElementById('s-splash').classList.add('on');
   }
+  // אם אין session — נשאר על splash (כבר מוצג)
 });
 
 setPlan('y');
