@@ -388,7 +388,7 @@
     <!-- ════════════════════════════════
          SPLASH
     ════════════════════════════════ -->
-    <div class="scr on" id="s-splash">
+    <div class="scr" id="s-splash" style="display:none">
       <div style="min-height:650px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;background:radial-gradient(ellipse at 50% 35%,#0d2820 0%,#0c0c0f 68%)">
         <div style="width:84px;height:84px;border-radius:26px;background:#0d2820;border:1.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 22px">
           <i class="ti ti-wind" style="font-size:40px;color:#5DCAA5"></i>
@@ -861,7 +861,7 @@
           </div>
           <div style="flex:1;text-align:right">
             <div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">שדרג ל-Pro</div>
-            <div style="font-size:12px;color:#4a7a60">פתח 6 טכניקות מתקדמות</div>
+            <div style="font-size:12px;color:#4a7a60">פתח 4 טכניקות מתקדמות</div>
           </div>
           <i class="ti ti-chevron-left" style="font-size:16px;color:#4a7a60"></i>
         </div>
@@ -917,6 +917,7 @@ function go(id) {
   const nid = NAV_MAP[id];
   if (nid) document.getElementById(nid).classList.add('on');
   document.getElementById('body').scrollTop = 0;
+  if (id === 's-home') updateGreeting();
   if (id === 's-breathe') { clearInterval(bTimer); bRound = 0; startBreathe(); }
   else clearInterval(bTimer);
   if (id === 's-progress') {
@@ -1134,14 +1135,24 @@ sb.auth.onAuthStateChange(async (event, session) => {
     await loadUserStats(session.user.id);
     enterApp();
   }
+  if (event === 'SIGNED_OUT') {
+    document.getElementById('nav-bar').classList.remove('visible');
+    go('s-splash');
+  }
 });
 
-// Check on load
+// בדוק session קיים בטעינת הדף — עבור ישר לבית
 sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) { loadUserStats(session.user.id); enterApp(); }
+  if (session) {
+    loadUserStats(session.user.id);
+    enterApp();
+  } else {
+    // אין session — הצג splash
+    document.getElementById('s-splash').style.display = 'block';
+    document.getElementById('s-splash').classList.add('on');
+  }
 });
 
-// ודא שהמחיר השנתי מוצג כברירת מחדל
 setPlan('y');
 
 // ════════ VALIDATION ════════
@@ -1451,16 +1462,39 @@ async function saveSettings() {
   go('s-home');
 }
 
-function loadSettings() {
-  const name   = localStorage.getItem('neshimot_name')   || '';
-  const gender = localStorage.getItem('neshimot_gender') || 'male';
-  userName   = name;
-  userGender = gender;
-  if (document.getElementById('settings-name')) {
-    document.getElementById('settings-name').value = name;
-  }
-  selectGender(gender);
+async function loadSettings() {
+  // קודם טען מ-localStorage לטעינה מהירה
+  const cachedName   = localStorage.getItem('neshimot_name')   || '';
+  const cachedGender = localStorage.getItem('neshimot_gender') || 'male';
+  userName   = cachedName;
+  userGender = cachedGender;
   updateGreeting();
+
+  // אחר כך טען מ-Supabase (הנתונים האמיתיים)
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    const { data: profile } = await sb.from('profiles')
+      .select('full_name, gender')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      // עדכן רק אם יש נתונים ב-Supabase
+      if (profile.full_name) {
+        userName = profile.full_name;
+        localStorage.setItem('neshimot_name', userName);
+      }
+      if (profile.gender) {
+        userGender = profile.gender;
+        localStorage.setItem('neshimot_gender', userGender);
+      }
+      // עדכן שדה שם במסך הגדרות
+      const nameInput = document.getElementById('settings-name');
+      if (nameInput) nameInput.value = userName;
+      selectGender(userGender);
+      updateGreeting();
+    }
+  }
 }
 
 function updateGreeting() {
@@ -1538,8 +1572,10 @@ function resetMoodQuiz() {
 }
 
 // ════════ OWNER PRO ACCESS ════════
+// ════════ PRO STATUS ════════
+let isPro = false;
+
 function checkOwnerAccess() {
-  // בדוק URL parameter: ?owner=neshimot2024
   const params = new URLSearchParams(window.location.search);
   if (params.get('owner') === 'neshimot2024') {
     isPro = true;
@@ -1548,15 +1584,11 @@ function checkOwnerAccess() {
     showToast('✓ מצב בעלים — Pro פעיל');
     return;
   }
-  // בדוק localStorage (נשמר מביקור קודם)
   if (localStorage.getItem('neshimot_owner') === 'true') {
     isPro = true;
     updateProUI();
   }
 }
-
-// ════════ PRO STATUS ════════
-let isPro = false;
 
 async function checkProStatus(userId) {
   const { data } = await sb.from('profiles').select('is_pro').eq('id', userId).single();
