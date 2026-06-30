@@ -1,0 +1,14 @@
+{
+  "name": "breathly",
+  "version": "1.0.0",
+  "description": "Breathly — מאמן הנשימה החכם",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "@supabase/supabase-js": "^2.0.0",
+    "web-push": "^3.6.7"
+  }
+}
