@@ -79,3 +79,9 @@ alter table public.profiles add column if not exists gender text default 'male';
 alter table public.profiles add column if not exists onboarding_goal text;
 alter table public.profiles add column if not exists onboarding_time text;
 alter table public.profiles add column if not exists onboarding_level text;
+
+-- עמודות ל-Push Notifications אמיתי (הרץ אם עדיין לא הרצת)
+alter table public.profiles add column if not exists push_subscription text;
+alter table public.profiles add column if not exists reminder_enabled boolean default false;
+-- שימי לב: reminder_time כבר קיים, רק נוודא ברירת מחדל
+alter table public.profiles alter column reminder_time set default '08:00';
