@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
   <title>Neshimot — מאמן הנשימה החכם</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1D9E75">
@@ -32,7 +32,7 @@
       padding: 16px;
     }
 
-    /* ── PHONE SHELL ── */
+    /* ── PHONE SHELL (browser preview mode) ── */
     .phone {
       width: 100%;
       max-width: 390px;
@@ -46,6 +46,30 @@
       flex-direction: column;
       position: relative;
       box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    }
+
+    /* ── STANDALONE PWA MODE — fullscreen, no fake phone frame ── */
+    @media (display-mode: standalone), (display-mode: fullscreen) {
+      body {
+        padding: 0;
+        background: #0c0c0f;
+      }
+      .phone {
+        max-width: 100%;
+        width: 100%;
+        min-height: 100vh;
+        height: 100vh;
+        max-height: 100vh;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
+      }
+      .status-bar { display: none; } /* המכשיר עצמו מציג status bar אמיתי */
+      .nav-bar { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
     }
 
     /* ── STATUS BAR ── */
@@ -392,6 +416,17 @@
   </style>
 </head>
 <body>
+
+<!-- ════════ INITIAL LOADING SCREEN ════════ -->
+<div id="boot-loader" style="position:fixed;inset:0;background:#0c0c0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s ease">
+  <img src="/icon-512.png" style="width:84px;height:84px;border-radius:24px;margin-bottom:20px;animation:boot-pulse 1.6s ease-in-out infinite" onerror="this.style.display='none'">
+  <div style="font-family:'Noto Serif Hebrew',serif;font-size:26px;color:#e8e6f0;margin-bottom:24px">Neshimot</div>
+  <div style="width:32px;height:32px;border:2.5px solid #1a2a24;border-top-color:#1D9E75;border-radius:50%;animation:boot-spin .8s linear infinite"></div>
+</div>
+<style>
+@keyframes boot-pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.06);opacity:.85} }
+@keyframes boot-spin { to { transform:rotate(360deg); } }
+</style>
 
 <div class="phone">
   <div class="status-bar">
@@ -745,6 +780,53 @@
     </div>
 
     <!-- ════════════════════════════════
+         SESSION FINISHED — Celebration
+    ════════════════════════════════ -->
+    <div class="scr" id="s-finish">
+      <div style="padding:40px 24px 32px;text-align:center">
+        <div id="finish-icon" style="width:80px;height:80px;border-radius:50%;background:#0d2820;border:2px solid #1D9E75;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:pop .5s cubic-bezier(.36,.07,.19,.97)">
+          <i class="ti ti-check" style="font-size:36px;color:#5DCAA5"></i>
+        </div>
+        <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:6px" id="finish-title">כל הכבוד!</div>
+        <div style="font-size:14px;color:#6b6480;line-height:1.6;margin-bottom:28px" id="finish-sub">השלמת אימון נשימה</div>
+
+        <!-- סטטיסטיקות סשן -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:24px">
+          <div class="sbox"><div class="sv" id="finish-mins">3</div><div class="sl">דקות</div></div>
+          <div class="sbox"><div class="sv" id="finish-rounds">4</div><div class="sl">סבבים</div></div>
+          <div class="sbox"><div class="sv" id="finish-streak">1</div><div class="sl">ימי רצף</div></div>
+        </div>
+
+        <!-- כרטיס שיתוף -->
+        <div id="share-card" style="background:linear-gradient(135deg,#0d2820 0%,#0d1a2a 100%);border:1px solid #2a5a4a;border-radius:20px;padding:24px;margin-bottom:20px;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">🌬️</div>
+          <div style="font-family:'Noto Serif Hebrew',serif;font-size:18px;color:#e8e6f0;margin-bottom:4px" id="share-text">השלמתי אימון נשימה</div>
+          <div style="font-size:12px;color:#5DCAA5">Neshimot · מאמן הנשימה החכם</div>
+        </div>
+
+        <button class="btn btn-primary" onclick="shareSession()" style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="ti ti-share" style="font-size:16px"></i>שתף לסטורי
+        </button>
+        <button class="btn btn-outline" onclick="go('s-home')">חזרה לבית</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SESSION HISTORY
+    ════════════════════════════════ -->
+    <div class="scr" id="s-history">
+      <div style="padding:20px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-direction:row-reverse">
+          <button style="background:none;border:none;cursor:pointer;color:#6b6480;font-size:20px;padding:0" onclick="go('s-progress')"><i class="ti ti-arrow-left" style="transform:scaleX(-1);display:inline-block"></i></button>
+          <div class="serif" style="font-size:22px;color:#e8e6f0">היסטוריית אימונים</div>
+        </div>
+        <div id="history-list" style="display:flex;flex-direction:column;gap:10px">
+          <div style="text-align:center;padding:40px 0;color:#4a4460;font-size:13px">טוען היסטוריה...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
          ALL TECHNIQUES
     ════════════════════════════════ -->
     <div class="scr" id="s-all">
@@ -792,6 +874,19 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
           <div class="bstat"><div class="bsn" id="p-sessions">0</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">אימונים</div><div style="font-size:12px;color:#6b6480">סה״כ</div><div class="bst" id="p-sessions-week"></div></div>
           <div class="bstat"><div class="bsn" id="p-mins">0</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">דקות</div><div style="font-size:12px;color:#6b6480">של נשימה</div><div class="bst" id="p-mins-week"></div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;cursor:pointer" onclick="openHistory()">
+          <div style="display:flex;align-items:center;gap:10px;flex-direction:row-reverse">
+            <div style="width:32px;height:32px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-history" style="font-size:16px;color:#5DCAA5"></i>
+            </div>
+            <div style="flex:1;text-align:right">
+              <div style="font-size:13px;font-weight:500;color:#e8e6f0">היסטוריית אימונים</div>
+              <div style="font-size:11px;color:#6b6480">כל ה-sessions שלך, לפי תאריך</div>
+            </div>
+            <i class="ti ti-chevron-left" style="font-size:16px;color:#4a4460"></i>
+          </div>
         </div>
         <div class="card" style="margin-bottom:16px">
           <div style="font-size:12px;color:#6b6480;margin-bottom:12px">איך הרגשת השבוע?</div>
@@ -897,6 +992,19 @@
           <div style="font-size:13px;color:#6b6480">פרטים אישיים</div>
         </div>
 
+        <!-- שפה -->
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:10px">שפה / Language</label>
+          <div style="display:flex;gap:10px;flex-direction:row-reverse">
+            <div id="lang-he" onclick="selectLanguage('he')" style="flex:1;background:#0d2820;border:1.5px solid #1D9E75;border-radius:14px;padding:12px;text-align:center;cursor:pointer;transition:all .2s">
+              <div style="font-size:13px;font-weight:500;color:#9FE1CB">עברית</div>
+            </div>
+            <div id="lang-en" onclick="selectLanguage('en')" style="flex:1;background:#14141c;border:.5px solid #2a2838;border-radius:14px;padding:12px;text-align:center;cursor:pointer;transition:all .2s">
+              <div style="font-size:13px;font-weight:500;color:#6b6480">English</div>
+            </div>
+          </div>
+        </div>
+
         <!-- שם פרטי -->
         <div style="margin-bottom:20px">
           <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:6px">שם פרטי</label>
@@ -993,6 +1101,8 @@ const NAV_MAP = {
   's-progress': 'ni-prog',
   's-pro':      null,
   's-settings': 'ni-settings',
+  's-history':  'ni-prog',
+  's-finish':   null,
 };
 
 function go(id) {
@@ -1028,6 +1138,7 @@ function spawnRipple(phase) {
 function enterApp() {
   document.getElementById('nav-bar').classList.add('visible');
   loadSettings();
+  loadLanguage();
   checkOwnerAccess();
   loadReminderSettings();
   go('s-home');
@@ -1247,7 +1358,19 @@ sb.auth.getSession().then(({ data: { session } }) => {
     enterApp();
   }
   // אם אין session — נשאר על splash (כבר מוצג)
-});
+  hideBootLoader();
+}).catch(() => hideBootLoader());
+
+// בטיחות — הסתר את ה-loader גם אם Supabase לא מגיב תוך 3 שניות
+setTimeout(hideBootLoader, 3000);
+
+function hideBootLoader() {
+  const loader = document.getElementById('boot-loader');
+  if (loader && loader.style.opacity !== '0') {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.remove(), 400);
+  }
+}
 
 setPlan('y');
 
@@ -1465,12 +1588,96 @@ function runPhase(idx, done) {
     if (s <= 0) { clearInterval(bTimer); runPhase(idx + 1, done); }
   }, 1000);
 }
-function stopBreath() {
+async function stopBreath() {
   clearInterval(bTimer);
   const tech = TECHNIQUES[currentTech];
-  saveSession(tech ? tech.mins : 3);
-  showToast('✓ אימון הושלם! כל הכבוד');
-  go('s-home');
+  const mins = tech ? tech.mins : 3;
+  const rounds = bRound >= bTotal ? bTotal : bRound;
+
+  await saveSession(mins);
+
+  // עדכן מסך סיום
+  document.getElementById('finish-mins').textContent   = mins;
+  document.getElementById('finish-rounds').textContent = rounds;
+  document.getElementById('finish-streak').textContent = document.getElementById('stat-streak').textContent;
+  document.getElementById('finish-sub').textContent     = `השלמת ${tech ? tech.name : 'אימון נשימה'}`;
+  document.getElementById('share-text').textContent     = `השלמתי ${rounds} סבבים של ${tech ? tech.name : 'נשימה מודרכת'} 🌬️`;
+
+  go('s-finish');
+}
+
+function shareSession() {
+  const text = document.getElementById('share-text').textContent;
+  if (navigator.share) {
+    navigator.share({
+      title: 'Neshimot',
+      text: text + '\n\nנסה גם אתה: neshimot-app.vercel.app',
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text + '\n\nneshimot-app.vercel.app');
+    showToast('✓ הועתק! אפשר להדביק בסטורי');
+  }
+}
+
+// ════════ SESSION HISTORY ════════
+const MOOD_EMOJI = { 'לחץ':'😤','חרדה':'😰','עייפות':'😴','מיקוד':'🎯','שינה':'🌙','בסדר':'🙂' };
+const TECH_NAME_MAP = {
+  '4-7-8':'נשימת 4-7-8', 'box':'Box Breathing', 'belly':'נשימת בטן',
+  'coherence':'נשימת קוהרנטיות', 'sleep':'ירידה לשינה', 'wimhof':'שיטת וים הוף',
+  'morning':'ערות בוקר', 'holotropic':'נשימה הולוטרופית', 'cardiac':'קוהרנטיות לבבית'
+};
+
+async function openHistory() {
+  go('s-history');
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+
+  const { data: sessions } = await sb
+    .from('sessions')
+    .select('technique, duration_mins, mood_before, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const container = document.getElementById('history-list');
+
+  if (!sessions || sessions.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:50px 20px;color:#4a4460">
+        <i class="ti ti-wind" style="font-size:40px;color:#2a2838;margin-bottom:12px;display:block"></i>
+        <div style="font-size:14px;color:#6b6480;margin-bottom:4px">עדיין אין אימונים</div>
+        <div style="font-size:12px">בצע את האימון הראשון שלך כדי לראות אותו כאן</div>
+      </div>`;
+    return;
+  }
+
+  // קבץ לפי תאריך
+  const grouped = {};
+  sessions.forEach(s => {
+    const date = new Date(s.created_at);
+    const dateKey = date.toLocaleDateString('he-IL', { day:'numeric', month:'long' });
+    if (!grouped[dateKey]) grouped[dateKey] = [];
+    grouped[dateKey].push(s);
+  });
+
+  let html = '';
+  for (const [dateKey, items] of Object.entries(grouped)) {
+    html += `<div style="font-size:11px;color:#4a4460;margin-top:6px;margin-bottom:2px;padding:0 4px">${dateKey}</div>`;
+    items.forEach(s => {
+      const time = new Date(s.created_at).toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit' });
+      const techName = TECH_NAME_MAP[s.technique] || s.technique;
+      const emoji = MOOD_EMOJI[s.mood_before] || '🙂';
+      html += `
+        <div class="tr" style="cursor:default">
+          <div class="tr-ico"><span style="font-size:17px">${emoji}</span></div>
+          <div class="tr-body">
+            <div class="tr-name">${techName}</div>
+            <div class="tr-desc">${s.duration_mins} דקות · ${time}</div>
+          </div>
+        </div>`;
+    });
+  }
+  container.innerHTML = html;
 }
 
 // ════════ PROGRESS CHART — נתונים אמיתיים ════════
@@ -1539,7 +1746,14 @@ async function loadWeekChart(userId) {
 
 // ════════ REMINDER / NOTIFICATIONS ════════
 let reminderEnabled = false;
-let reminderTimer   = null;
+const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY'; // ← מ-web-push generate-vapid-keys
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw     = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
 
 function toggleReminder() {
   reminderEnabled = !reminderEnabled;
@@ -1550,7 +1764,7 @@ function toggleReminder() {
     tog.style.background   = '#1D9E75';
     thumb.style.transform  = 'translateX(-20px)';
     const time = document.getElementById('reminder-time').value || '08:00';
-    status.textContent = `תזכורת יומית בשעה ${time}`;
+    status.textContent = `תזכורת יומית בשעה ${time} — גם כשהאפליקציה סגורה`;
     status.style.color = '#5DCAA5';
     requestNotificationPermission();
   } else {
@@ -1558,51 +1772,85 @@ function toggleReminder() {
     thumb.style.transform = 'translateX(0)';
     status.textContent    = 'התראה כבויה';
     status.style.color    = '#4a4460';
-    if (reminderTimer) clearTimeout(reminderTimer);
+    savePushSubscription(null); // נטרל תזכורות בשרת
   }
 }
 
 async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    showToast('הדפדפן לא תומך בהתראות');
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showToast('הדפדפן הזה לא תומך בהתראות פוש');
+    reminderEnabled = false;
+    toggleReminder();
     return;
   }
+
   const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    showToast('✓ התראות אופשרו');
-    scheduleReminder();
-  } else {
+  if (perm !== 'granted') {
     showToast('אפשר התראות בהגדרות הדפדפן');
+    reminderEnabled = false;
+    toggleReminder();
+    return;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    await savePushSubscription(sub);
+    showToast('✓ התראות פעילות — יעבדו גם כשהאפליקציה סגורה');
+  } catch (e) {
+    console.error('Push subscription failed:', e);
+    showToast('שגיאה בהפעלת התראות — נסה שוב');
     reminderEnabled = false;
     toggleReminder();
   }
 }
 
-function scheduleReminder() {
-  if (reminderTimer) clearTimeout(reminderTimer);
-  const timeVal = document.getElementById('reminder-time').value || '08:00';
-  const [h, m]  = timeVal.split(':').map(Number);
-  const now     = new Date();
-  const target  = new Date();
-  target.setHours(h, m, 0, 0);
-  if (target <= now) target.setDate(target.getDate() + 1);
-  const ms = target - now;
-  reminderTimer = setTimeout(() => {
-    const name = userName ? `, ${userName}` : '';
-    new Notification(`זמן לנשום${name} 🌬️`, {
-      body: 'לחץ להתחיל session של 3 דקות',
-      icon: '/favicon.ico'
+async function savePushSubscription(subscription) {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const time = document.getElementById('reminder-time')?.value || '08:00';
+
+  try {
+    await fetch('/api/save-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user.id,
+        subscription,
+        reminderTime: time,
+        reminderEnabled: !!subscription
+      })
     });
-    scheduleReminder(); // קבע למחרת
-  }, ms);
+  } catch (e) {
+    console.error('Failed to save subscription:', e);
+  }
+
+  // גם ב-Supabase ישירות (גיבוי)
+  await sb.from('profiles').update({
+    reminder_time:    time,
+    reminder_enabled: !!subscription
+  }).eq('id', user.id);
 }
 
-function loadReminderSettings() {
-  const enabled = localStorage.getItem('neshimot_reminder') === 'true';
-  const time    = localStorage.getItem('neshimot_reminder_time') || '08:00';
+async function loadReminderSettings() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await sb.from('profiles')
+    .select('reminder_time, reminder_enabled')
+    .eq('id', user.id)
+    .single();
+
   const timeInput = document.getElementById('reminder-time');
-  if (timeInput) timeInput.value = time;
-  if (enabled) {
+  if (profile?.reminder_time && timeInput) timeInput.value = profile.reminder_time;
+
+  if (profile?.reminder_enabled) {
     reminderEnabled = false; // כדי ש-toggle יפעיל
     toggleReminder();
   }
@@ -1650,6 +1898,27 @@ function playPhaseSound(phase) {
   }
 }
 
+// ════════ LANGUAGE ════════
+let appLang = 'he';
+function selectLanguage(lang) {
+  appLang = lang;
+  document.getElementById('lang-he').style.background  = lang === 'he' ? '#0d2820' : '#14141c';
+  document.getElementById('lang-he').style.borderColor  = lang === 'he' ? '#1D9E75' : '#2a2838';
+  document.getElementById('lang-he').querySelector('div').style.color = lang === 'he' ? '#9FE1CB' : '#6b6480';
+  document.getElementById('lang-en').style.background  = lang === 'en' ? '#0d2820' : '#14141c';
+  document.getElementById('lang-en').style.borderColor  = lang === 'en' ? '#1D9E75' : '#2a2838';
+  document.getElementById('lang-en').querySelector('div').style.color = lang === 'en' ? '#9FE1CB' : '#6b6480';
+  localStorage.setItem('neshimot_lang', lang);
+  if (lang === 'en') {
+    showToast('🌍 גרסה אנגלית מלאה תתווסף בקרוב — בינתיים האפליקציה תישאר בעברית');
+    setTimeout(() => selectLanguage('he'), 2000);
+  }
+}
+function loadLanguage() {
+  const lang = localStorage.getItem('neshimot_lang') || 'he';
+  selectLanguage(lang);
+}
+
 // ════════ SETTINGS ════════
 let userGender = 'male';
 let userName   = '';
@@ -1682,17 +1951,20 @@ async function saveSettings() {
   const time = document.getElementById('reminder-time').value || '08:00';
   userName   = name;
 
-  // שמור תזכורת
-  localStorage.setItem('neshimot_reminder',      reminderEnabled ? 'true' : 'false');
-  localStorage.setItem('neshimot_reminder_time', time);
-  if (reminderEnabled) scheduleReminder();
+  // עדכן שעת תזכורת אם פעילה
+  if (reminderEnabled) {
+    await savePushSubscription((await navigator.serviceWorker.ready).pushManager.getSubscription
+      ? await (await navigator.serviceWorker.ready).pushManager.getSubscription()
+      : null);
+  }
 
   // שמור ב-Supabase
   const { data: { user } } = await sb.auth.getUser();
   if (user) {
     await sb.from('profiles').update({
       full_name: name,
-      gender:    userGender
+      gender:    userGender,
+      reminder_time: time
     }).eq('id', user.id);
   }
 
@@ -1814,10 +2086,12 @@ function buildPersonalPlan() {
   document.getElementById('plan-summary').textContent =
     `בנינו לך תוכנית להשגת: ${goalNames[obGoal]}`;
 
-  // אם בחר תזכורת זמן קבוע — הצע להפעיל
+  // אם בחר זמן קבוע — קבע את שעת התזכורת בפועל (לא רק localStorage)
   if (obTime !== 'flexible') {
     const timeMap = { morning: '08:00', noon: '13:00', evening: '21:00' };
-    localStorage.setItem('neshimot_reminder_time', timeMap[obTime]);
+    window._onboardingReminderTime = timeMap[obTime];
+  } else {
+    window._onboardingReminderTime = null;
   }
 
   // שמור את הבחירות ב-Supabase
@@ -1837,6 +2111,13 @@ async function saveOnboardingData() {
 
 function startFirstSession() {
   enterApp();
+  // אם נבחר זמן קבוע ב-onboarding — מלא את השדה והפעל push
+  if (window._onboardingReminderTime) {
+    setTimeout(() => {
+      const timeInput = document.getElementById('reminder-time');
+      if (timeInput) timeInput.value = window._onboardingReminderTime;
+    }, 100);
+  }
   setTimeout(() => startTech(recommendedTech), 300);
 }
 
