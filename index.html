@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Neshimot — מאמן הנשימה החכם</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Neshimot">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: 'Heebo', sans-serif;
+      direction: rtl;
+      background: #060608;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* ── PHONE SHELL ── */
+    .phone {
+      width: 100%;
+      max-width: 390px;
+      background: #0c0c0f;
+      border-radius: 40px;
+      border: 6px solid #1a1a22;
+      overflow: hidden;
+      min-height: 780px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 24px 7px;
+      background: #0c0c0f;
+      flex-shrink: 0;
+      direction: ltr;
+    }
+    .sb-time { font-size: 13px; font-weight: 600; color: #e8e6f0; }
+    .sb-icons { display: flex; gap: 5px; align-items: center; }
+    .sb-icons i { font-size: 13px; color: #9992b0; }
+
+    /* ── SCROLLABLE BODY ── */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    .body::-webkit-scrollbar { display: none; }
+
+    /* ── SCREENS ── */
+    .scr { display: none; }
+    .scr.on { display: block; animation: fadein 0.22s ease; }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── BOTTOM NAV ── */
+    .nav-bar {
+      display: none; /* shown after login */
+      justify-content: space-around;
+      background: #0c0c0f;
+      border-top: 0.5px solid #1a1a22;
+      padding: 10px 0 16px;
+      flex-shrink: 0;
+      direction: ltr;
+    }
+    .nav-bar.visible { display: flex; }
+    .ni {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; cursor: pointer; padding: 0 10px;
+    }
+    .ni i   { font-size: 21px; color: #3a3850; transition: color .15s; }
+    .ni span{ font-size: 10px; color: #3a3850; font-family: 'Heebo',sans-serif; transition: color .15s; }
+    .ni.on i, .ni.on span { color: #5DCAA5; }
+
+    /* ── COLOURS ── */
+    .teal   { color: #5DCAA5; }
+    .teal-lt{ color: #9FE1CB; }
+    .dim    { color: #6b6480; }
+    .dimmer { color: #4a4460; }
+    .bright { color: #e8e6f0; }
+    .serif  { font-family: 'Noto Serif Hebrew', serif; }
+
+    /* ── SURFACES ── */
+    .card {
+      background: #14141c;
+      border: 0.5px solid #2a2838;
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .card-green { border-color: #2a5a4a; background: #0d2820; }
+
+    /* ── INPUTS ── */
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; color: #6b6480; margin-bottom: 5px; }
+    .inp-wrap { position: relative; }
+    .inp {
+      width: 100%;
+      background: #14141c;
+      border: 0.5px solid #2a2838;
+      border-radius: 14px;
+      padding: 13px 16px 13px 44px;
+      font-size: 14px;
+      color: #e8e6f0;
+      font-family: 'Heebo', sans-serif;
+      outline: none;
+      text-align: right;
+      transition: border-color .2s;
+    }
+    .inp::placeholder { color: #3a3458; }
+    .inp:focus { border-color: #1D9E75; }
+    .inp.error { border-color: #c0392b; }
+    .inp-left-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #6b6480; font-size: 16px; pointer-events: none;
+    }
+    .inp-eye {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #6b6480; font-size: 15px; cursor: pointer;
+    }
+    .err-msg { font-size: 11px; color: #c0392b; margin-top: 4px; display: none; }
+    .err-msg.show { display: block; }
+
+    /* password strength */
+    .str-bar { height: 3px; border-radius: 2px; background: #1a1a22; margin-top: 7px; overflow: hidden; }
+    .str-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
+    .str-lbl  { font-size: 10px; margin-top: 3px; text-align: left; min-height: 14px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%; padding: 14px;
+      border-radius: 16px; border: none;
+      font-size: 15px; font-weight: 700;
+      font-family: 'Heebo', sans-serif;
+      cursor: pointer; transition: opacity .15s;
+      margin-bottom: 10px;
+    }
+    .btn:hover  { opacity: .88; }
+    .btn:active { opacity: .75; transform: scale(.99); }
+    .btn-primary { background: #1D9E75; color: #E1F5EE; }
+    .btn-primary:disabled { opacity: .4; pointer-events: none; }
+    .btn-outline {
+      background: transparent; color: #9992b0;
+      border: 0.5px solid #2a2838;
+    }
+    .btn-google {
+      background: #14141c; color: #e8e6f0;
+      border: 0.5px solid #2a2838;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-google:hover { border-color: #3a3850; }
+    .g-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: conic-gradient(#4285F4 0 25%, #EA4335 25% 50%, #FBBC05 50% 75%, #34A853 75%);
+      flex-shrink: 0;
+    }
+
+    /* or divider */
+    .or-div { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+    .or-line { flex: 1; height: 0.5px; background: #2a2838; }
+    .or-txt  { font-size: 12px; color: #4a4460; }
+
+    /* switch link */
+    .auth-switch { text-align: center; font-size: 13px; color: #6b6480; margin-top: 6px; }
+    .auth-switch a { color: #5DCAA5; cursor: pointer; text-decoration: none; }
+    .auth-switch a:hover { color: #9FE1CB; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: #1D9E75; color: #E1F5EE;
+      padding: 10px 20px; border-radius: 20px;
+      font-size: 13px; font-family: 'Heebo',sans-serif;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    /* loading spinner */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle; margin-left: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SECTION HEADER ── */
+    .sh { padding: 0 22px 10px; display: flex; justify-content: space-between; align-items: baseline; }
+    .sh-lbl  { font-size: 11px; font-weight: 500; color: #6b6480; letter-spacing: .04em; }
+    .sh-link { font-size: 12px; color: #5DCAA5; cursor: pointer; }
+    .sh-link:hover { color: #9FE1CB; }
+
+    /* ── TECHNIQUE CARDS ── */
+    .techs-row {
+      display: flex; flex-direction: row-reverse;
+      gap: 10px; padding: 0 16px 18px;
+      overflow-x: auto;
+    }
+    .techs-row::-webkit-scrollbar { display: none; }
+    .tc {
+      flex-shrink: 0;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 16px; padding: 14px; width: 134px;
+      cursor: pointer; transition: border-color .2s;
+    }
+    .tc:hover { border-color: #3a3850; }
+    .tc.sel   { border: 1.5px solid #1D9E75; background: #0d2820; }
+    .tc-ico   { width: 28px; height: 28px; border-radius: 8px; background: #1a1a24; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
+    .tc-ico i { font-size: 14px; color: #9992b0; }
+    .tc.sel .tc-ico { background: #0d2e20; }
+    .tc.sel .tc-ico i { color: #5DCAA5; }
+    .tc-name  { font-size: 13px; font-weight: 500; color: #e8e6f0; margin-bottom: 2px; }
+    .tc-dur   { font-size: 11px; color: #6b6480; }
+    .tc-tag   { display: inline-block; margin-top: 5px; font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #1a2a1a; color: #5DCAA5; }
+    .tc-tag.w { background: #2a1e10; color: #EF9F27; }
+    .tc-tag.b { background: #101a2a; color: #85B7EB; }
+
+    /* ── MOOD CHIPS ── */
+    .mood-row { display: flex; gap: 7px; flex-wrap: wrap; flex-direction: row-reverse; padding: 0 16px 18px; }
+    .mc {
+      padding: 6px 13px; border-radius: 20px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      font-size: 12px; color: #9992b0; cursor: pointer; transition: all .15s;
+    }
+    .mc:hover { border-color: #3a3850; color: #c8c0e0; }
+    .mc.sel   { background: #0d2820; border-color: #1D9E75; color: #9FE1CB; }
+
+    /* ── STATS GRID ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 16px 24px; }
+    .sbox { background: #14141c; border: 0.5px solid #2a2838; border-radius: 14px; padding: 12px; text-align: center; }
+    .sv { font-size: 22px; font-weight: 500; color: #e8e6f0; }
+    .sl { font-size: 11px; color: #6b6480; margin-top: 2px; }
+
+    /* ── BREATHE SCREEN ── */
+    .ring-wrap { display: flex; justify-content: center; margin-bottom: 24px; position: relative; }
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid;
+      animation: ripple-out 1.8s ease-out forwards;
+      pointer-events: none;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    @keyframes ripple-out {
+      from { width: 176px; height: 176px; opacity: 0.6; }
+      to   { width: 320px; height: 320px; opacity: 0; }
+    }
+    .b-ring {
+      width: 180px; height: 180px; border-radius: 50%;
+      border: 1.5px solid #2a5a4a; background: #0d2820;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: transform .7s ease;
+    }
+    .b-phlbl { font-size: 12px; color: #5DCAA5; letter-spacing: .04em; margin-bottom: 4px; }
+    .b-num   { font-family: 'Noto Serif Hebrew', serif; font-size: 54px; color: #e8e6f0; line-height: 1; }
+    .pph     { display: flex; justify-content: center; gap: 7px; margin-bottom: 20px; flex-direction: row-reverse; }
+    .pp      { padding: 5px 12px; border-radius: 20px; background: #14141c; border: 0.5px solid #2a2838; }
+    .pp.on   { background: #0d2820; border-color: #1D9E75; }
+    .pp span { font-size: 12px; color: #6b6480; }
+    .pp.on span { color: #9FE1CB; }
+    .dots-row { display: flex; justify-content: center; gap: 7px; margin-bottom: 24px; }
+    .dot      { width: 6px; height: 6px; border-radius: 50%; background: #2a2838; }
+    .dot.done { background: #1D9E75; }
+    .back-btn {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+      cursor: pointer; flex-direction: row-reverse; justify-content: flex-end;
+    }
+    .back-btn i    { font-size: 18px; color: #6b6480; transform: scaleX(-1); }
+    .back-btn span { font-size: 13px; color: #6b6480; }
+
+    /* ── ALL TECHNIQUES ── */
+    .tr {
+      display: flex; align-items: center; gap: 12px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 16px; padding: 14px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color .2s; flex-direction: row-reverse;
+    }
+    .tr:hover { border-color: #3a3850; }
+    .tr.free  { border-color: #2a5a4a; }
+    .tr-ico   { width: 36px; height: 36px; border-radius: 11px; background: #1a1a24; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tr-ico i { font-size: 17px; color: #9992b0; }
+    .tr.free .tr-ico { background: #0d2820; }
+    .tr.free .tr-ico i { color: #5DCAA5; }
+    .tr-body  { flex: 1; text-align: right; }
+    .tr-name  { font-size: 14px; font-weight: 500; color: #e8e6f0; margin-bottom: 2px; }
+    .tr-desc  { font-size: 12px; color: #6b6480; }
+    .tr-right { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .tr-dur   { font-size: 11px; color: #4a4460; }
+    .free-tag { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #0d3828; color: #5DCAA5; }
+    .pro-tag  { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #1a1826; color: #9992b0; display: flex; align-items: center; gap: 3px; }
+
+    /* ── PROGRESS ── */
+    .week-row { display: flex; justify-content: space-between; padding: 0 6px; margin-bottom: 20px; flex-direction: row-reverse; }
+    .day-col  { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .day-lbl  { font-size: 10px; color: #6b6480; }
+    .day-bg   { width: 24px; height: 60px; background: #14141c; border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
+    .day-bar  { width: 100%; border-radius: 6px; background: #1D9E75; }
+    .day-dot  { width: 6px; height: 6px; border-radius: 50%; background: #2a2838; }
+    .day-dot.done { background: #1D9E75; }
+    .bstat    { background: #14141c; border: 0.5px solid #2a2838; border-radius: 16px; padding: 16px; }
+    .bsn      { font-family: 'Noto Serif Hebrew', serif; font-size: 32px; color: #e8e6f0; }
+    .bst      { font-size: 11px; color: #5DCAA5; margin-top: 4px; }
+    .mh-row   { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-direction: row-reverse; }
+    .mh-lbl   { font-size: 12px; color: #9992b0; width: 54px; flex-shrink: 0; text-align: right; }
+    .mh-bg    { flex: 1; height: 6px; background: #1a1a22; border-radius: 3px; overflow: hidden; display: flex; justify-content: flex-end; }
+    .mh-bar   { height: 100%; border-radius: 3px; background: #1D9E75; }
+
+    /* ── PRO / PAYWALL ── */
+    .plan-toggle { display: flex; background: #14141c; border: 0.5px solid #2a2838; border-radius: 14px; padding: 3px; gap: 3px; direction: ltr; }
+    .pt-tab { flex: 1; padding: 9px; border-radius: 11px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: #6b6480; background: none; border: none; transition: all .2s; position: relative; font-family: 'Heebo',sans-serif; }
+    .pt-tab.on { background: #0d2820; color: #9FE1CB; }
+    .save-pill { position: absolute; top: -9px; right: 4px; background: #1D9E75; color: #E1F5EE; font-size: 10px; padding: 2px 7px; border-radius: 8px; font-weight: 500; }
+
+    /* ── ONBOARDING STEPS ── */
+    .sdot    { width: 7px; height: 7px; border-radius: 50%; background: #2a2838; transition: all .2s; }
+    .sdot.on { background: #1D9E75; width: 22px; border-radius: 4px; }
+    .ob-opt  {
+      display: flex; align-items: center; gap: 12px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color .2s; flex-direction: row-reverse;
+    }
+    .ob-opt:hover { border-color: #3a3850; }
+    .ob-opt.sel   { border-color: #1D9E75; background: #0d2820; }
+    .ob-ico   { width: 34px; height: 34px; border-radius: 10px; background: #1a1a24; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ob-ico i { font-size: 17px; color: #9992b0; }
+    .ob-opt.sel .ob-ico { background: #0d2820; }
+    .ob-opt.sel .ob-ico i { color: #5DCAA5; }
+
+    /* ── UNLOCK BANNER ── */
+    .unlock-ban {
+      background: #0d2820; border: 0.5px solid #2a5a4a;
+      border-radius: 16px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; flex-direction: row-reverse;
+    }
+    .ub-ico { width: 34px; height: 34px; border-radius: 11px; background: #1D9E75; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ub-ico i { font-size: 17px; color: #E1F5EE; }
+
+    /* ── SUCCESS ANIMATION ── */
+    .success-ring {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #0d2820; border: 1.5px solid #2a5a4a;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      animation: pop .4s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes pop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .wchip {
+      display: flex; align-items: center; gap: 10px;
+      background: #14141c; border: 0.5px solid #2a2838;
+      border-radius: 12px; padding: 12px 14px;
+      flex-direction: row-reverse;
+      animation: slide .3s ease forwards; opacity: 0;
+    }
+    .wchip:nth-child(1) { animation-delay: .1s; }
+    .wchip:nth-child(2) { animation-delay: .25s; }
+    .wchip:nth-child(3) { animation-delay: .4s; }
+    @keyframes slide { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span class="sb-time" id="clock">9:41</span>
+    <div class="sb-icons">
+      <i class="ti ti-wifi"></i>
+      <i class="ti ti-battery-2"></i>
+    </div>
+  </div>
+
+  <div class="body" id="body">
+
+    <!-- ════════════════════════════════
+         SPLASH
+    ════════════════════════════════ -->
+    <div class="scr on" id="s-splash">
+      <div style="min-height:650px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;background:radial-gradient(ellipse at 50% 35%,#0d2820 0%,#0c0c0f 68%)">
+        <img src="/icon-512.png" style="width:110px;height:110px;border-radius:30px;margin:0 auto 22px;display:block;object-fit:cover;">
+        <div class="serif" style="font-size:40px;color:#e8e6f0;margin-bottom:10px">Neshimot</div>
+        <div style="font-size:16px;color:#6b6480;margin-bottom:52px;line-height:1.7">מאמן הנשימה החכם שלך<br>מבוסס בינה מלאכותית</div>
+        <button class="btn btn-primary" onclick="go('s-register')">התחל — בחינם</button>
+        <button class="btn btn-outline" onclick="go('s-login')">יש לי כבר חשבון</button>
+        <div style="font-size:11px;color:#3a3458;margin-top:10px">נסה 7 ימים בחינם</div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         REGISTER
+    ════════════════════════════════ -->
+    <div class="scr" id="s-register">
+      <div style="padding:0 22px 32px">
+        <div style="text-align:center;padding:30px 0 22px">
+          <img src="/icon-512.png" style="width:56px;height:56px;border-radius:17px;margin:0 auto 12px;display:block;object-fit:cover;">
+          <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px">יצירת חשבון</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.6">הצטרף למאות ישראלים שנושמים טוב יותר</div>
+        </div>
+
+        <button class="btn btn-google" onclick="signInGoogle()">
+          <div class="g-dot"></div>
+          המשך עם Google
+        </button>
+        <div class="or-div"><div class="or-line"></div><div class="or-txt">או</div><div class="or-line"></div></div>
+
+        <div class="field">
+          <label>שם מלא</label>
+          <div class="inp-wrap">
+            <input class="inp" id="reg-name" type="text" placeholder="ישראל ישראלי" oninput="valReg()">
+            <i class="ti ti-user inp-left-icon"></i>
+          </div>
+        </div>
+        <div class="field">
+          <label>אימייל</label>
+          <div class="inp-wrap">
+            <input class="inp" id="reg-email" type="email" placeholder="you@gmail.com" dir="ltr" style="text-align:left" oninput="valReg()">
+            <i class="ti ti-mail inp-left-icon"></i>
+          </div>
+        </div>
+        <div class="field">
+          <label>סיסמה</label>
+          <div class="inp-wrap">
+            <input class="inp" id="reg-pw" type="password" placeholder="לפחות 8 תווים" dir="ltr" style="text-align:left" oninput="valReg();chkStr()">
+            <span class="inp-eye" onclick="togglePw('reg-pw',this)"><i class="ti ti-eye"></i></span>
+          </div>
+          <div class="str-bar"><div class="str-fill" id="str-fill"></div></div>
+          <div class="str-lbl" id="str-lbl"></div>
+        </div>
+
+        <div id="reg-err" class="err-msg"></div>
+        <div style="font-size:11px;color:#4a4460;text-align:center;margin-bottom:14px;line-height:1.6">
+          בהרשמה אתה מסכים ל<span style="color:#5DCAA5;cursor:pointer">תנאי השימוש</span> ו<span style="color:#5DCAA5;cursor:pointer">מדיניות הפרטיות</span>
+        </div>
+        <button class="btn btn-primary" id="reg-btn" onclick="doRegister()" disabled>צור חשבון</button>
+        <div class="auth-switch">כבר רשום? <a onclick="go('s-login')">כניסה</a></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         LOGIN
+    ════════════════════════════════ -->
+    <div class="scr" id="s-login">
+      <div style="padding:0 22px 32px">
+        <div style="text-align:center;padding:30px 0 22px">
+          <img src="/icon-512.png" style="width:56px;height:56px;border-radius:17px;margin:0 auto 12px;display:block;object-fit:cover;">
+          <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px">כניסה</div>
+          <div style="font-size:13px;color:#6b6480">ברוך הבא חזרה 👋</div>
+        </div>
+
+        <button class="btn btn-google" onclick="signInGoogle()">
+          <div class="g-dot"></div>
+          המשך עם Google
+        </button>
+        <div class="or-div"><div class="or-line"></div><div class="or-txt">או</div><div class="or-line"></div></div>
+
+        <div class="field">
+          <label>אימייל</label>
+          <div class="inp-wrap">
+            <input class="inp" id="login-email" type="email" placeholder="you@gmail.com" dir="ltr" style="text-align:left" oninput="valLogin()">
+            <i class="ti ti-mail inp-left-icon"></i>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:6px">
+          <label>סיסמה</label>
+          <div class="inp-wrap">
+            <input class="inp" id="login-pw" type="password" placeholder="הסיסמה שלך" dir="ltr" style="text-align:left" oninput="valLogin()">
+            <span class="inp-eye" onclick="togglePw('login-pw',this)"><i class="ti ti-eye"></i></span>
+          </div>
+        </div>
+        <div style="text-align:left;margin-bottom:16px">
+          <span style="font-size:12px;color:#5DCAA5;cursor:pointer" onclick="go('s-forgot')">שכחת סיסמה?</span>
+        </div>
+        <div id="login-err" class="err-msg"></div>
+        <button class="btn btn-primary" id="login-btn" onclick="doLogin()" disabled>כניסה</button>
+        <div class="auth-switch">חדש כאן? <a onclick="go('s-register')">צור חשבון</a></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         FORGOT PASSWORD
+    ════════════════════════════════ -->
+    <div class="scr" id="s-forgot">
+      <div style="padding:24px 22px 32px">
+        <div class="back-btn" onclick="go('s-login')" style="margin-bottom:28px">
+          <i class="ti ti-arrow-left"></i><span>חזור</span>
+        </div>
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="width:54px;height:54px;border-radius:16px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <i class="ti ti-key" style="font-size:24px;color:#5DCAA5"></i>
+          </div>
+          <div class="serif" style="font-size:22px;color:#e8e6f0;margin-bottom:6px">שחזור סיסמה</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.6">הכנס את האימייל שלך ונשלח<br>קישור לאיפוס הסיסמה</div>
+        </div>
+        <div class="field">
+          <label>אימייל</label>
+          <div class="inp-wrap">
+            <input class="inp" id="forgot-email" type="email" placeholder="you@gmail.com" dir="ltr" style="text-align:left" oninput="valForgot()">
+            <i class="ti ti-mail inp-left-icon"></i>
+          </div>
+        </div>
+        <div id="forgot-err" class="err-msg"></div>
+        <button class="btn btn-primary" id="forgot-btn" onclick="doForgot()" disabled>שלח קישור לאיפוס</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 1
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob1">
+      <div style="padding:28px 22px 24px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:26px">
+          <div class="sdot on"></div><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+        </div>
+        <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px;text-align:center">מה המטרה העיקרית שלך?</div>
+        <div style="font-size:13px;color:#6b6480;text-align:center;margin-bottom:22px">נתאים לך את חוויית הנשימה</div>
+        <div class="ob-opt sel" onclick="selObGoal(this,'stress')">
+          <div class="ob-ico"><i class="ti ti-brain"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">הפחתת לחץ וחרדה</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להרגיש רגוע יותר בחיי היום יום</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObGoal(this,'sleep')">
+          <div class="ob-ico"><i class="ti ti-moon"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">שיפור השינה</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להירדם מהר יותר ולישון עמוק</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObGoal(this,'energy')">
+          <div class="ob-ico"><i class="ti ti-bolt"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">יותר אנרגיה ומיקוד</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להיות חד ופרודוקטיבי יותר</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObGoal(this,'health')">
+          <div class="ob-ico"><i class="ti ti-heart"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">בריאות כללית</div><div style="font-size:12px;color:#6b6480;margin-top:2px">HRV, לחץ דם ואיכות חיים</div></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="go('s-ob2')">המשך</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 2
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob2">
+      <div style="padding:28px 22px 24px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:26px">
+          <div class="sdot"></div><div class="sdot on"></div><div class="sdot"></div><div class="sdot"></div>
+        </div>
+        <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px;text-align:center">מתי בדרך כלל יש לך זמן?</div>
+        <div style="font-size:13px;color:#6b6480;text-align:center;margin-bottom:22px">נשלח לך תזכורות בזמן הנכון</div>
+        <div class="ob-opt sel" onclick="selObTime(this,'morning')">
+          <div class="ob-ico"><i class="ti ti-sun"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">בוקר (6:00–9:00)</div><div style="font-size:12px;color:#6b6480;margin-top:2px">להתחיל את היום בכוח</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObTime(this,'noon')">
+          <div class="ob-ico"><i class="ti ti-clock"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">צהריים (12:00–14:00)</div><div style="font-size:12px;color:#6b6480;margin-top:2px">איפוס באמצע היום</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObTime(this,'evening')">
+          <div class="ob-ico"><i class="ti ti-moon"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">ערב (20:00–23:00)</div><div style="font-size:12px;color:#6b6480;margin-top:2px">הכנה לשינה</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObTime(this,'flexible')">
+          <div class="ob-ico"><i class="ti ti-refresh"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">גמיש — כשמתאים לי</div><div style="font-size:12px;color:#6b6480;margin-top:2px">ללא תזכורות קבועות</div></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="go('s-ob25')">הבא</button>
+        <button class="btn btn-outline" onclick="go('s-ob1')">חזור</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 2.5 — Experience level
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob25">
+      <div style="padding:28px 22px 24px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:26px">
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot on"></div><div class="sdot"></div>
+        </div>
+        <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:5px;text-align:center">כמה ניסיון יש לך בנשימה מודרכת?</div>
+        <div style="font-size:13px;color:#6b6480;text-align:center;margin-bottom:22px">נתאים את רמת הקושי הראשונית</div>
+        <div class="ob-opt sel" onclick="selObLevel(this,'beginner')">
+          <div class="ob-ico"><i class="ti ti-seedling"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">מתחיל לגמרי</div><div style="font-size:12px;color:#6b6480;margin-top:2px">אף פעם לא תרגלתי נשימה מודרכת</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObLevel(this,'some')">
+          <div class="ob-ico"><i class="ti ti-leaf"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">יש לי קצת ניסיון</div><div style="font-size:12px;color:#6b6480;margin-top:2px">ניסיתי כמה פעמים בעבר</div></div>
+        </div>
+        <div class="ob-opt" onclick="selObLevel(this,'experienced')">
+          <div class="ob-ico"><i class="ti ti-yoga"></i></div>
+          <div><div style="font-size:14px;font-weight:500;color:#e8e6f0">מנוסה</div><div style="font-size:12px;color:#6b6480;margin-top:2px">מתרגל באופן קבוע</div></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="buildPersonalPlan();go('s-ob3')">צור לי תוכנית אישית ←</button>
+        <button class="btn btn-outline" onclick="go('s-ob2')">חזור</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ONBOARDING 3 — Welcome
+    ════════════════════════════════ -->
+    <div class="scr" id="s-ob3">
+      <div style="padding:28px 22px 32px">
+        <div style="display:flex;justify-content:center;gap:7px;margin-bottom:22px">
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div><div class="sdot on"></div>
+        </div>
+        <div style="text-align:center;padding:8px 0 20px">
+          <div class="success-ring" style="width:56px;height:56px;margin-bottom:14px"><i class="ti ti-sparkles" style="font-size:24px;color:#5DCAA5"></i></div>
+          <div class="serif" style="font-size:24px;color:#e8e6f0;margin-bottom:6px">התוכנית האישית שלך מוכנה</div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.6" id="plan-summary">בנינו לך תוכנית מותאמת אישית</div>
+        </div>
+
+        <!-- כרטיס תוכנית -->
+        <div style="background:#0d2820;border:1px solid #2a5a4a;border-radius:18px;padding:18px;margin-bottom:14px">
+          <div style="font-size:11px;color:#5DCAA5;letter-spacing:.04em;margin-bottom:10px">המלצה ראשונה</div>
+          <div style="display:flex;align-items:center;gap:12px;flex-direction:row-reverse;margin-bottom:12px">
+            <div id="plan-icon" style="width:44px;height:44px;border-radius:13px;background:#1D9E75;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-wind" style="font-size:20px;color:#E1F5EE"></i>
+            </div>
+            <div style="text-align:right;flex:1">
+              <div id="plan-technique" style="font-size:16px;font-weight:500;color:#e8e6f0;margin-bottom:2px">נשימת 4-7-8</div>
+              <div id="plan-reason" style="font-size:12px;color:#9FE1CB">מתאימה למטרה שלך</div>
+            </div>
+          </div>
+          <div id="plan-schedule" style="font-size:12px;color:#6b6480;background:#14141c;border-radius:10px;padding:10px 12px;text-align:right">
+            📅 מומלץ לתרגל כל בוקר
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+          <div class="wchip"><i class="ti ti-wind" style="color:#5DCAA5;font-size:16px"></i><span style="font-size:13px;color:#c8c0e0;text-align:right">5 טכניקות נשימה חינמיות</span></div>
+          <div class="wchip"><i class="ti ti-target" style="color:#5DCAA5;font-size:16px"></i><span style="font-size:13px;color:#c8c0e0;text-align:right" id="plan-level-chip">מותאם לרמת הניסיון שלך</span></div>
+          <div class="wchip"><i class="ti ti-chart-line" style="color:#5DCAA5;font-size:16px"></i><span style="font-size:13px;color:#c8c0e0;text-align:right">מעקב התקדמות אישי</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="startFirstSession()">התחל את התרגול הראשון ←</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         HOME
+    ════════════════════════════════ -->
+    <div class="scr" id="s-home">
+      <div style="padding:22px 22px 14px">
+        <div style="font-size:11px;color:#6b6480;letter-spacing:.04em;margin-bottom:4px" id="greeting">בוקר טוב</div>
+        <div class="serif" style="font-size:26px;color:#e8e6f0;line-height:1.3" id="ready-text">מוכן <span class="teal-lt">לנשום?</span></div>
+      </div>
+
+      <div class="card" style="margin:0 16px 16px">
+        <div style="font-size:11px;color:#6b6480;margin-bottom:10px">האימון של היום</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-direction:row-reverse">
+          <div style="width:48px;height:48px;border-radius:50%;border:1.5px solid #2a5a4a;background:#0d2820;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-wind" style="font-size:20px;color:#5DCAA5"></i>
+          </div>
+          <div style="flex:1;text-align:right">
+            <div id="today-name" style="font-size:14px;font-weight:500;color:#e8e6f0;margin-bottom:2px">נשימת 4-7-8</div>
+            <div id="today-desc" style="font-size:12px;color:#6b6480">הרגעה · 4 סבבים · ~3 דקות</div>
+          </div>
+          <button class="btn btn-primary" style="width:auto;margin:0;padding:8px 16px;font-size:13px;border-radius:12px;margin-bottom:0" onclick="go('s-breathe')">התחל</button>
+        </div>
+      </div>
+
+      <div class="sh">
+        <span class="sh-lbl">טכניקות</span>
+        <span class="sh-link" onclick="go('s-all')">הצג הכל</span>
+      </div>
+      <div class="techs-row">
+        <div class="tc sel" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-moon"></i></div><div class="tc-name">4-7-8</div><div class="tc-dur">3 דקות</div><span class="tc-tag">הרגעה</span></div>
+        <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-square"></i></div><div class="tc-name">Box</div><div class="tc-dur">4 דקות</div><span class="tc-tag b">מיקוד</span></div>
+        <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-bolt"></i></div><div class="tc-name">וים הוף</div><div class="tc-dur">6 דקות</div><span class="tc-tag w">אנרגיה</span></div>
+        <div class="tc" onclick="selTc(this)"><div class="tc-ico"><i class="ti ti-wave-sine"></i></div><div class="tc-name">קוהרנטיות</div><div class="tc-dur">5 דקות</div><span class="tc-tag">HRV</span></div>
+      </div>
+
+
+
+      <div class="sh"><span class="sh-lbl">הסטטיסטיקות שלך</span></div>
+      <div class="stats-grid">
+        <div class="sbox"><div class="sv" id="stat-streak">0</div><div class="sl">ימי רצף</div></div>
+        <div class="sbox"><div class="sv" id="stat-sessions">0</div><div class="sl">אימונים</div></div>
+        <div class="sbox"><div class="sv" id="stat-mins">0</div><div class="sl">דקות</div></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         BREATHE
+    ════════════════════════════════ -->
+    <div class="scr" id="s-breathe">
+      <div style="padding:22px 22px 0">
+        <div class="back-btn" onclick="go('s-home')"><i class="ti ti-arrow-left"></i><span>חזור</span></div>
+        <div class="serif" style="font-size:22px;color:#e8e6f0;margin-bottom:3px" id="b-title">נשימת 4-7-8</div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:28px" id="b-subtitle">איפוס מערכת העצבים · 4 סבבים</div>
+        <div class="ring-wrap">
+          <div class="b-ring" id="b-ring">
+            <div class="b-phlbl" id="b-lbl">שאיפה</div>
+            <div class="b-num" id="b-num">4</div>
+          </div>
+        </div>
+        <div class="pph">
+          <div class="pp on" id="pp0"><span>שאיפה 4שנ׳</span></div>
+          <div class="pp" id="pp1"><span>עצירה 7שנ׳</span></div>
+          <div class="pp" id="pp2"><span>נשיפה 8שנ׳</span></div>
+        </div>
+        <div class="dots-row" id="dots"></div>
+        <button class="btn btn-outline" onclick="stopBreath()" style="margin:0 0 24px">סיים אימון</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         ALL TECHNIQUES
+    ════════════════════════════════ -->
+    <div class="scr" id="s-all">
+      <div style="padding:20px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-direction:row-reverse">
+          <button style="background:none;border:none;cursor:pointer;color:#6b6480;font-size:20px;padding:0" onclick="go('s-home')"><i class="ti ti-arrow-left" style="transform:scaleX(-1);display:inline-block"></i></button>
+          <div class="serif" style="font-size:22px;color:#e8e6f0">כל הטכניקות</div>
+        </div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:20px;padding-right:30px">שדרג ל-Pro — 4 טכניקות מתקדמות נוספות</div>
+        <div style="font-size:13px;color:#6b6480;margin-bottom:6px;padding-right:4px">כל טכניקה מותאמת למצב רוח ספציפי</div>
+        <div style="font-size:12px;color:#4a4460;margin-bottom:16px;padding-right:4px">בחר מצב רוח בעמוד ההתקדמות לקבל המלצה אישית</div>
+
+        <div class="tr free" onclick="startTech('4-7-8')"><div class="tr-ico"><i class="ti ti-mood-nervous"></i></div><div class="tr-body"><div class="tr-name">נשימת 4-7-8</div><div class="tr-desc">😤 לחץ ועומס · הרגעה מיידית</div></div><div class="tr-right"><div class="tr-dur">3 דק׳</div><div class="free-tag">חינם</div></div></div>
+
+        <div class="tr free" onclick="startTech('box')"><div class="tr-ico"><i class="ti ti-mood-anxious"></i></div><div class="tr-body"><div class="tr-name">Box Breathing</div><div class="tr-desc">😰 חרדה ודאגה · איזון מיידי</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="free-tag">חינם</div></div></div>
+
+        <div class="tr free" onclick="startTech('belly')"><div class="tr-ico"><i class="ti ti-mood-empty"></i></div><div class="tr-body"><div class="tr-name">נשימת בטן</div><div class="tr-desc">😴 עייפות · טעינת אנרגיה</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
+
+        <div class="tr free" onclick="startTech('coherence')"><div class="tr-ico"><i class="ti ti-target"></i></div><div class="tr-body"><div class="tr-name">נשימת קוהרנטיות</div><div class="tr-desc">🎯 רוצה להתמקד · חדות מחשבתית</div></div><div class="tr-right"><div class="tr-dur">5 דק׳</div><div class="free-tag">חינם</div></div></div>
+
+        <div class="tr free" onclick="startTech('sleep')"><div class="tr-ico"><i class="ti ti-moon"></i></div><div class="tr-body"><div class="tr-name">ירידה לשינה</div><div class="tr-desc">🌙 קשה לישון · הרגעת הלילה</div></div><div class="tr-right"><div class="tr-dur">8 דק׳</div><div class="free-tag">חינם</div></div></div>
+
+        <div style="height:.5px;background:#2a2838;margin:16px 0"></div>
+        <div style="font-size:11px;color:#6b6480;margin-bottom:12px;padding-right:4px">טכניקות Pro — מתקדמות יותר</div>
+
+        <div class="tr" onclick="startProTech('wimhof')"><div class="tr-ico"><i class="ti ti-bolt"></i></div><div class="tr-body"><div class="tr-name">שיטת וים הוף</div><div class="tr-desc">אנרגיה · חיסון · קור</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('morning')"><div class="tr-ico"><i class="ti ti-sun"></i></div><div class="tr-body"><div class="tr-name">ערות בוקר</div><div class="tr-desc">השכמה · ערנות · ללא קפאין</div></div><div class="tr-right"><div class="tr-dur">4 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('holotropic')"><div class="tr-ico"><i class="ti ti-brain"></i></div><div class="tr-body"><div class="tr-name">הולוטרופית</div><div class="tr-desc">עבודה עמוקה · זרימה</div></div><div class="tr-right"><div class="tr-dur">10 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="tr" onclick="startProTech('cardiac')"><div class="tr-ico"><i class="ti ti-heart"></i></div><div class="tr-body"><div class="tr-name">קוהרנטיות לבבית</div><div class="tr-desc">לחץ דם · אריכות ימים</div></div><div class="tr-right"><div class="tr-dur">6 דק׳</div><div class="pro-tag"><i class="ti ti-lock" style="font-size:10px"></i> Pro</div></div></div>
+        <div class="unlock-ban" onclick="go('s-pro')" style="margin-top:14px">
+          <div class="ub-ico"><i class="ti ti-crown"></i></div>
+          <div style="flex:1;text-align:right"><div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">פתח 4 טכניקות מתקדמות</div><div style="font-size:12px;color:#4a7a60">התחל ניסיון חינם 7 ימים ←</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PROGRESS
+    ════════════════════════════════ -->
+    <div class="scr" id="s-progress">
+      <div style="padding:22px 16px 24px">
+        <div style="margin-bottom:20px;padding:0 6px">
+          <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:4px">ההתקדמות שלך</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div class="bstat"><div class="bsn" id="p-sessions">0</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">אימונים</div><div style="font-size:12px;color:#6b6480">סה״כ</div><div class="bst" id="p-sessions-week"></div></div>
+          <div class="bstat"><div class="bsn" id="p-mins">0</div><div style="font-size:13px;color:#6b6480;margin-bottom:2px">דקות</div><div style="font-size:12px;color:#6b6480">של נשימה</div><div class="bst" id="p-mins-week"></div></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-size:12px;color:#6b6480;margin-bottom:12px">איך הרגשת השבוע?</div>
+          <div id="mood-quiz">
+            <div style="font-size:13px;color:#9992b0;margin-bottom:10px">בחר את מה שמתאר אותך הכי טוב:</div>
+            <div style="display:flex;flex-direction:column;gap:8px" id="mood-options">
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'לחץ')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">לחץ ועומס</div><div style="font-size:11px;color:#6b6480">הרגשה של צפי ומתח</div></div>
+                <span style="font-size:20px;flex-shrink:0">😤</span>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'חרדה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">חרדה ודאגה</div><div style="font-size:11px;color:#6b6480">מחשבות מטרידות וחוסר שקט</div></div>
+                <span style="font-size:20px;flex-shrink:0">😰</span>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'עייפות')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">עייפות וחוסר אנרגיה</div><div style="font-size:11px;color:#6b6480">קשה להתרכז ולהניע את עצמך</div></div>
+                <span style="font-size:20px;flex-shrink:0">😴</span>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'מיקוד')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">רוצה להתמקד</div><div style="font-size:11px;color:#6b6480">צריך חדות ובהירות מחשבתית</div></div>
+                <span style="font-size:20px;flex-shrink:0">🎯</span>
+              </div>
+              <div class="mood-quiz-opt" onclick="selectMoodQuiz(this,'שינה')" style="background:#14141c;border:.5px solid #2a2838;border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-direction:row-reverse;transition:border-color .2s;justify-content:flex-start">
+                <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#e8e6f0">קשה לישון</div><div style="font-size:11px;color:#6b6480">מוח לא מצליח להירגע בלילה</div></div>
+                <span style="font-size:20px;flex-shrink:0">🌙</span>
+              </div>
+            </div>
+          </div>
+          <div id="mood-recommendation" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-direction:row-reverse">
+              <div style="width:32px;height:32px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0" id="rec-icon"></div>
+              <div style="text-align:right">
+                <div style="font-size:11px;color:#5DCAA5;margin-bottom:2px">המלצה עבורך</div>
+                <div style="font-size:14px;font-weight:500;color:#e8e6f0" id="rec-title"></div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:#9992b0;line-height:1.6;margin-bottom:12px" id="rec-desc"></div>
+            <button onclick="startRecommended()" class="btn btn-primary" style="margin:0;padding:10px;font-size:13px">התחל עכשיו ←</button>
+            <div style="text-align:center;margin-top:8px"><span onclick="resetMoodQuiz()" style="font-size:12px;color:#4a4460;cursor:pointer">שאלון מחדש</span></div>
+          </div>
+        </div>
+        <div class="card-green card">
+          <div style="font-size:10px;color:#5DCAA5;letter-spacing:.04em;margin-bottom:6px">תובנת מאמן AI</div>
+          <div style="font-size:13px;color:#9FE1CB;line-height:1.6">המשך לנשום כל יום — עקביות היא המפתח לשיפור מדיד ב-HRV ובהפחתת הסטרס.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PRO / PAYWALL
+    ════════════════════════════════ -->
+    <div class="scr" id="s-pro">
+      <div style="padding:0 0 28px">
+        <div style="text-align:center;padding:28px 22px 20px">
+          <div style="width:58px;height:58px;border-radius:18px;background:#0d2820;border:1px solid #2a5a4a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <i class="ti ti-crown" style="font-size:26px;color:#5DCAA5"></i>
+          </div>
+          <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:6px">Neshimot <span class="teal-lt">Pro</span></div>
+          <div style="font-size:13px;color:#6b6480;line-height:1.7">פתח 4 טכניקות נשימה מתקדמות.<br>נסה בחינם 7 ימים.</div>
+        </div>
+
+        <div class="plan-toggle" style="margin:0 16px 16px;direction:rtl">
+          <button class="pt-tab on" id="pty" onclick="setPlan('y')">שנתי<span class="save-pill">חסוך ₪29</span></button>
+          <button class="pt-tab" id="ptm" onclick="setPlan('m')">חודשי</button>
+        </div>
+        <div style="text-align:center;margin-bottom:18px">
+          <span class="serif" style="font-size:44px;color:#e8e6f0" id="pbig">₪199</span>
+          <span style="font-size:14px;color:#6b6480" id="price-period"> / שנה</span>
+          <div style="font-size:12px;color:#4a4460;margin-top:4px" id="pnote">חיסכון של ₪29 לעומת חודשי</div>
+        </div>
+
+        <div style="padding:0 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:11px;background:#14141c;border:.5px solid #2a2838;border-radius:14px;padding:14px">
+            <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#c8c0e0">גישה ל-4 טכניקות מתקדמות</div><div style="font-size:12px;color:#4a4460;margin-top:2px">וים הוף, קוהרנטיות, שינה, בוקר ועוד</div></div>
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-wind" style="font-size:15px;color:#5DCAA5"></i></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;background:#14141c;border:.5px solid #2a2838;border-radius:14px;padding:14px">
+            <div style="text-align:right;flex:1"><div style="font-size:13px;font-weight:500;color:#c8c0e0">אימונים ללא הגבלה</div><div style="font-size:12px;color:#4a4460;margin-top:2px">תרגל כמה שרוצה, בכל זמן</div></div>
+            <div style="width:30px;height:30px;border-radius:10px;background:#0d2820;border:.5px solid #2a5a4a;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-infinity" style="font-size:15px;color:#5DCAA5"></i></div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 16px;direction:ltr">
+          <div style="display:flex"><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5">ימ</div><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5;margin-left:-6px">שר</div><div style="width:24px;height:24px;border-radius:50%;background:#0d2820;border:2px solid #0c0c0f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#5DCAA5;margin-left:-6px">אכ</div></div>
+          <span style="font-size:12px;color:#6b6480;font-family:'Heebo',sans-serif"><strong style="color:#9992b0">מאות משתמשים</strong> · 4.8 <i class="ti ti-star" style="font-size:11px;color:#5DCAA5"></i></span>
+        </div>
+
+        <div style="padding:0 16px 10px">
+          <button class="btn btn-primary" onclick="doStripeCheckout()" id="stripe-btn">התחל ניסיון חינם ל-7 ימים</button>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#4a4460;margin-bottom:14px" id="ptrial">ללא חיוב ל-7 ימים ניסיון</div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SETTINGS
+    ════════════════════════════════ -->
+    <div class="scr" id="s-settings">
+      <div style="padding:22px 22px 32px">
+        <div style="margin-bottom:24px">
+          <div class="serif" style="font-size:26px;color:#e8e6f0;margin-bottom:4px">הגדרות</div>
+          <div style="font-size:13px;color:#6b6480">פרטים אישיים</div>
+        </div>
+
+        <!-- שם פרטי -->
+        <div style="margin-bottom:20px">
+          <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:6px">שם פרטי</label>
+          <div style="position:relative">
+            <input class="inp" id="settings-name" type="text" placeholder="הכנס שם פרטי" oninput="previewGreeting()">
+            <i class="ti ti-user inp-left-icon"></i>
+          </div>
+        </div>
+
+        <!-- מגדר -->
+        <div style="margin-bottom:28px">
+          <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:10px">מגדר</label>
+          <div style="display:flex;gap:10px;flex-direction:row-reverse">
+            <div id="gender-male" onclick="selectGender('male')" style="flex:1;background:#0d2820;border:1.5px solid #1D9E75;border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:all .2s">
+              <div style="font-size:22px;margin-bottom:4px">👨</div>
+              <div style="font-size:13px;font-weight:500;color:#9FE1CB">זכר</div>
+            </div>
+            <div id="gender-female" onclick="selectGender('female')" style="flex:1;background:#14141c;border:.5px solid #2a2838;border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:all .2s">
+              <div style="font-size:22px;margin-bottom:4px">👩</div>
+              <div style="font-size:13px;font-weight:500;color:#6b6480">נקבה</div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- שעת תזכורת -->
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:6px">תזכורת יומית</label>
+          <div style="display:flex;align-items:center;gap:12px;flex-direction:row-reverse">
+            <div style="flex:1;position:relative">
+              <input class="inp" id="reminder-time" type="time" value="08:00" style="text-align:center;direction:ltr;cursor:pointer">
+            </div>
+            <div id="reminder-toggle" onclick="toggleReminder()" style="width:48px;height:28px;border-radius:14px;background:#2a2838;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s">
+              <div id="reminder-thumb" style="width:22px;height:22px;border-radius:50%;background:#e8e6f0;position:absolute;top:3px;right:3px;transition:transform .2s"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#4a4460;margin-top:6px;text-align:right" id="reminder-status">התראה כבויה</div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">שמור</button>
+
+        <!-- כפתור Pro -->
+        <div style="margin-top:16px;background:#0d2820;border:.5px solid #2a5a4a;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-direction:row-reverse;cursor:pointer" onclick="go('s-pro')">
+          <div style="width:32px;height:32px;border-radius:10px;background:#1D9E75;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-crown" style="font-size:16px;color:#E1F5EE"></i>
+          </div>
+          <div style="flex:1;text-align:right">
+            <div style="font-size:13px;font-weight:500;color:#9FE1CB;margin-bottom:2px">שדרג ל-Pro</div>
+            <div style="font-size:12px;color:#4a7a60">פתח 4 טכניקות מתקדמות</div>
+          </div>
+          <i class="ti ti-chevron-left" style="font-size:16px;color:#4a7a60"></i>
+        </div>
+
+        <!-- התנתקות -->
+        <button onclick="signOut()" style="width:100%;margin-top:14px;padding:12px;background:none;border:.5px solid #2a2838;border-radius:14px;font-size:13px;color:#6b6480;cursor:pointer;font-family:'Heebo',sans-serif">
+          <i class="ti ti-logout" style="margin-left:6px"></i>התנתק
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- BOTTOM NAV -->
+  <div class="nav-bar" id="nav-bar">
+    <div class="ni" id="ni-settings" onclick="go('s-settings')"><i class="ti ti-settings"></i><span>הגדרות</span></div>
+    <div class="ni" id="ni-prog" onclick="go('s-progress')"><i class="ti ti-chart-line"></i><span>התקדמות</span></div>
+    <div class="ni" id="ni-breathe" onclick="go('s-breathe')"><i class="ti ti-wind"></i><span>נשימה</span></div>
+    <div class="ni on" id="ni-home" onclick="go('s-home')"><i class="ti ti-home"></i><span>בית</span></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG — החלף בערכים שלך מ-Supabase ו-Stripe
+// ════════════════════════════════════════
+const SUPABASE_URL  = 'https://gjbgbabjqtziwkrlxldp.supabase.co';   // ← מ-Supabase Settings > API
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqYmdiYWJqcXR6aXdrcmx4bGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzkyNzYsImV4cCI6MjA5Nzg1NTI3Nn0.JiMCNoklSyqrXNe2WqDyd4Ii8itswylxTUqbhemrLKI';               // ← מ-Supabase Settings > API
+const LS_STORE = "neshimot"; // Lemon Squeezy store
+const LS_MONTHLY_URL = "https://neshimot.lemonsqueezy.com/checkout/buy/1690b3b0-1fc7-45de-ba85-8cd72dcba111";
+const LS_YEARLY_URL = "https://neshimot.lemonsqueezy.com/checkout/buy/0383549b-ec12-4f69-b872-9faf5ff6a81f";
+
+// Init
+const sb     = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+// ════════ NAVIGATION ════════
+const NAV_MAP = {
+  's-home':     'ni-home',
+  's-breathe':  'ni-breathe',
+  's-progress': 'ni-prog',
+  's-pro':      null,
+  's-settings': 'ni-settings',
+};
+
+function go(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  const nid = NAV_MAP[id];
+  if (nid) document.getElementById(nid).classList.add('on');
+  document.getElementById('body').scrollTop = 0;
+  if (id === 's-home') updateGreeting();
+  if (id === 's-breathe') { clearInterval(bTimer); bRound = 0; startBreathe(); }
+  else clearInterval(bTimer);
+  if (id === 's-progress') {
+    sb.auth.getUser().then(({ data: { user } }) => {
+      if (user) loadWeekChart(user.id);
+    });
+  }
+}
+
+function spawnRipple(phase) {
+  const wrap = document.querySelector('.ring-wrap');
+  if (!wrap) return;
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  if (phase === 'שאיפה')  r.style.borderColor = '#1D9E75';
+  else if (phase === 'עצירה') r.style.borderColor = '#378ADD';
+  else if (phase === 'נשיפה') r.style.borderColor = '#7F77DD';
+  else r.style.borderColor = '#2a5a4a';
+  wrap.appendChild(r);
+  setTimeout(() => r.remove(), 1800);
+}
+
+function enterApp() {
+  document.getElementById('nav-bar').classList.add('visible');
+  loadSettings();
+  checkOwnerAccess();
+  loadReminderSettings();
+  go('s-home');
+}
+
+// ════════ CLOCK & GREETING ════════
+function setGreeting() {
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : 'ערב טוב';
+}
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' +
+    now.getMinutes().toString().padStart(2,'0');
+}
+updateClock(); setInterval(updateClock, 10000);
+
+// ════════ TOAST ════════
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ════════ AUTH — SUPABASE ════════
+async function doRegister() {
+  const btn   = document.getElementById('reg-btn');
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw    = document.getElementById('reg-pw').value;
+  const err   = document.getElementById('reg-err');
+
+  btn.innerHTML = 'יוצר חשבון<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const { data, error } = await sb.auth.signUp({
+    email, password: pw,
+    options: { data: { full_name: name } }
+  });
+
+  btn.innerHTML = 'צור חשבון';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = translateError(error.message);
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+
+  // Save user profile
+  if (data.user) {
+    await sb.from('profiles').upsert({
+      id: data.user.id,
+      full_name: name,
+      sessions: 0,
+      streak: 0,
+      total_mins: 0
+    });
+  }
+
+  showToast('✓ נשלח אימייל אימות — בדוק את תיבת הדואר');
+  go('s-ob1');
+}
+
+async function doLogin() {
+  const btn   = document.getElementById('login-btn');
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const err   = document.getElementById('login-err');
+
+  btn.innerHTML = 'מתחבר<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+
+  btn.innerHTML = 'כניסה';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = translateError(error.message);
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  await loadUserStats(data.user.id);
+  enterApp();
+}
+
+async function signInGoogle() {
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function doForgot() {
+  const btn   = document.getElementById('forgot-btn');
+  const email = document.getElementById('forgot-email').value.trim();
+  const err   = document.getElementById('forgot-err');
+
+  btn.innerHTML = 'שולח<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href + '?reset=true'
+  });
+
+  btn.innerHTML = 'שלח קישור לאיפוס';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = translateError(error.message);
+    err.classList.add('show'); return;
+  }
+  showToast('✓ קישור נשלח לאימייל שלך');
+  setTimeout(() => go('s-login'), 1800);
+}
+
+function translateError(msg) {
+  if (msg.includes('Invalid login'))    return 'אימייל או סיסמה שגויים';
+  if (msg.includes('already registered')) return 'האימייל כבר קיים — נסה להתחבר';
+  if (msg.includes('Password should'))  return 'הסיסמה חייבת להכיל לפחות 6 תווים';
+  if (msg.includes('Unable to validate')) return 'אימייל לא תקין';
+  return 'שגיאה — נסה שוב';
+}
+
+// ════════ USER STATS ════════
+async function loadUserStats(userId) {
+  const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if (data) {
+    document.getElementById('stat-streak').textContent   = data.streak   || 0;
+    document.getElementById('stat-sessions').textContent = data.sessions  || 0;
+    document.getElementById('stat-mins').textContent     = (data.total_mins || 0) + ' דק׳';
+    document.getElementById('p-sessions').textContent    = data.sessions  || 0;
+    document.getElementById('p-mins').textContent        = data.total_mins|| 0;
+    isPro = data.is_pro || false;
+    updateProUI();
+  }
+}
+
+async function saveSession(mins) {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+
+  // 1. הוסף session לטבלת sessions עם תאריך מדויק
+  await sb.from('sessions').insert({
+    user_id:      user.id,
+    technique:    currentTech,
+    duration_mins: mins,
+    mood_before:  currentMood || 'בסדר',
+    created_at:   new Date().toISOString()
+  });
+
+  // 2. עדכן סטטיסטיקות בפרופיל
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (profile) {
+    // חשב streak — בדוק אם תירגל אתמול
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split('T')[0];
+    const { data: ySessions } = await sb.from('sessions')
+      .select('id').eq('user_id', user.id)
+      .gte('created_at', yStr + 'T00:00:00')
+      .lte('created_at', yStr + 'T23:59:59');
+    const newStreak = (ySessions && ySessions.length > 0)
+      ? (profile.streak || 0) + 1
+      : 1;
+
+    await sb.from('profiles').update({
+      sessions:    (profile.sessions   || 0) + 1,
+      streak:      newStreak,
+      total_mins:  (profile.total_mins || 0) + mins
+    }).eq('id', user.id);
+    await loadUserStats(user.id);
+  }
+}
+
+// ════════ STRIPE CHECKOUT ════════
+async function doStripeCheckout() {
+  const btn = document.getElementById('stripe-btn');
+  btn.innerHTML = 'מכין תשלום<span class="spinner"></span>';
+  btn.disabled = true;
+
+  // בחר URL לפי תוכנית
+  const isYearly = document.getElementById('pty').classList.contains('on');
+  const checkoutUrl = isYearly ? LS_YEARLY_URL : LS_MONTHLY_URL;
+
+  // קבל את פרטי המשתמש מ-Supabase
+  const { data: { user } } = await sb.auth.getUser();
+
+  // הוסף את האימייל לURL כדי למלא אוטומטית בדף התשלום
+  const finalUrl = user?.email
+    ? `${checkoutUrl}?checkout[email]=${encodeURIComponent(user.email)}`
+    : checkoutUrl;
+
+  // עבור לדף התשלום של Lemon Squeezy
+  window.location.href = finalUrl;
+}
+
+// ════════ AUTH STATE LISTENER ════════
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    await loadUserStats(session.user.id);
+    enterApp();
+  }
+  if (event === 'SIGNED_OUT') {
+    document.getElementById('nav-bar').classList.remove('visible');
+    go('s-splash');
+  }
+});
+
+// בדוק session קיים בטעינת הדף — עבור ישר לבית
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    loadUserStats(session.user.id);
+    enterApp();
+  }
+  // אם אין session — נשאר על splash (כבר מוצג)
+});
+
+setPlan('y');
+
+// ════════ VALIDATION ════════
+function valReg() {
+  const n = document.getElementById('reg-name').value.trim();
+  const e = document.getElementById('reg-email').value.trim();
+  const p = document.getElementById('reg-pw').value;
+  const ok = n.length > 1 && /\S+@\S+\.\S+/.test(e) && p.length >= 8;
+  document.getElementById('reg-btn').disabled = !ok;
+}
+function valLogin() {
+  const e = document.getElementById('login-email').value.trim();
+  const p = document.getElementById('login-pw').value;
+  document.getElementById('login-btn').disabled = !(/\S+@\S+\.\S+/.test(e) && p.length >= 6);
+}
+function valForgot() {
+  const e = document.getElementById('forgot-email').value.trim();
+  document.getElementById('forgot-btn').disabled = !/\S+@\S+\.\S+/.test(e);
+}
+function togglePw(id, icon) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  icon.innerHTML = inp.type === 'text'
+    ? '<i class="ti ti-eye-off"></i>' : '<i class="ti ti-eye"></i>';
+}
+function chkStr() {
+  const pw = document.getElementById('reg-pw').value;
+  const fill = document.getElementById('str-fill');
+  const lbl  = document.getElementById('str-lbl');
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const lvls = [
+    { w:'20%', c:'#c0392b', t:'חלשה' },
+    { w:'40%', c:'#EF9F27', t:'בסיסית' },
+    { w:'60%', c:'#EF9F27', t:'סבירה' },
+    { w:'80%', c:'#5DCAA5', t:'טובה' },
+    { w:'100%',c:'#1D9E75', t:'חזקה' },
+  ];
+  const l = lvls[Math.min(score, 4)];
+  fill.style.width = pw.length ? l.w : '0';
+  fill.style.background = l.c;
+  lbl.style.color = l.c;
+  lbl.textContent = pw.length ? l.t : '';
+}
+
+// ════════ UI HELPERS ════════
+// טכניקות נשימה
+const TECHNIQUES = {
+  '4-7-8':      { name:'נשימת 4-7-8',      sub:'איפוס מערכת העצבים',    phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:7,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:8,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 7שנ׳','נשיפה 8שנ׳'], rounds:4, mins:3 },
+  'box':        { name:'Box Breathing',     sub:'שליטה בסטרס ומיקוד',   phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:4,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:4,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 4שנ׳','נשיפה 4שנ׳'], rounds:4, mins:4 },
+  'belly':      { name:'נשימת בטן',         sub:'הרגעה בסיסית ויומית',  phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:6,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 4שנ׳','נשיפה 6שנ׳','מנוחה 2שנ׳'],  rounds:5, mins:5 },
+  // Pro
+  'wimhof':     { name:'שיטת וים הוף',      sub:'אנרגיה וחיזוק חיסוני', phases:[{lbl:'שאיפה',sec:2,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:2,scale:'1',pp:'pp1'},{lbl:'עצירה',sec:5,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 2שנ׳','נשיפה 2שנ׳','עצירה 5שנ׳'],  rounds:6, mins:6 },
+  'coherence':  { name:'נשימת קוהרנטיות',   sub:'HRV ובריאות הלב',       phases:[{lbl:'שאיפה',sec:5,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:5,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 5שנ׳','נשיפה 5שנ׳','מנוחה 2שנ׳'],  rounds:5, mins:5 },
+  'morning':    { name:'ערות בוקר',          sub:'השכמה וערנות טבעית',   phases:[{lbl:'שאיפה',sec:3,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:1,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:3,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 3שנ׳','עצירה 1שנ׳','נשיפה 3שנ׳'],  rounds:4, mins:4 },
+  'sleep':      { name:'ירידה לשינה',        sub:'שינה עמוקה ורוגע',     phases:[{lbl:'שאיפה',sec:4,scale:'1.13',pp:'pp0'},{lbl:'עצירה',sec:7,scale:'1.13',pp:'pp1'},{lbl:'נשיפה',sec:8,scale:'1',pp:'pp2'}], ppLabels:['שאיפה 4שנ׳','עצירה 7שנ׳','נשיפה 8שנ׳'],  rounds:8, mins:8 },
+  'holotropic': { name:'נשימה הולוטרופית',   sub:'עבודה עמוקה וזרימה',   phases:[{lbl:'שאיפה',sec:2,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:2,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:1,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 2שנ׳','נשיפה 2שנ׳','מנוחה 1שנ׳'],  rounds:10, mins:10 },
+  'cardiac':    { name:'קוהרנטיות לבבית',    sub:'לחץ דם ואריכות ימים',  phases:[{lbl:'שאיפה',sec:5,scale:'1.13',pp:'pp0'},{lbl:'נשיפה',sec:5,scale:'1',pp:'pp1'},{lbl:'מנוחה',sec:2,scale:'1',pp:'pp2'}],  ppLabels:['שאיפה 5שנ׳','נשיפה 5שנ׳','מנוחה 2שנ׳'],  rounds:6, mins:6 },
+};
+
+let currentTech = '4-7-8';
+
+function startProTech(techKey) {
+  if (!isPro) {
+    showToast('🔒 טכניקה זו זמינה ל-Pro בלבד');
+    setTimeout(() => go('s-pro'), 800);
+    return;
+  }
+  startTech(techKey);
+}
+
+function selTc(el) {
+  document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  const name = el.querySelector('.tc-name').textContent.trim();
+  if      (name === '4-7-8')      currentTech = '4-7-8';
+  else if (name === 'Box')        currentTech = 'box';
+  else if (name === 'וים הוף')   currentTech = 'wimhof';
+  else if (name === 'קוהרנטיות') currentTech = 'box';
+  else                            currentTech = 'belly';
+
+  const tech = TECHNIQUES[currentTech];
+  document.getElementById('today-name').textContent = tech.name;
+  document.getElementById('today-desc').textContent = `${tech.sub} · ${tech.rounds} סבבים · ~${tech.mins} דקות`;
+}
+
+function startTech(techKey) {
+  currentTech = techKey;
+  go('s-breathe');
+}
+let currentMood = 'בסדר';
+function selMc(el, mood) {
+  document.querySelectorAll('.mc').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  currentMood = mood;
+  // שמור mood לSession הבא
+  window._nextMood = mood;
+  // עדכן גרף מצבי רוח בעמוד התקדמות
+  updateMoodChart(mood);
+}
+
+function updateMoodChart(mood) {
+  const moodMap = {
+    'חרד':    { calm:20, focus:30, stress:80 },
+    'לחוץ':   { calm:30, focus:40, stress:70 },
+    'עייף':   { calm:40, focus:25, stress:50 },
+    'מבולבל': { calm:35, focus:20, stress:55 },
+    'בסדר':   { calm:72, focus:55, stress:30 },
+  };
+  const vals = moodMap[mood] || moodMap['בסדר'];
+  // עדכן באנימציה
+  const bars = document.querySelectorAll('.mh-bar');
+  const pcts = document.querySelectorAll('.mh-row div:last-child');
+  if (bars[0]) { bars[0].style.width = vals.calm + '%'; if(pcts[0]) pcts[0].textContent = vals.calm + '%'; }
+  if (bars[1]) { bars[1].style.width = vals.focus + '%'; if(pcts[1]) pcts[1].textContent = vals.focus + '%'; }
+  if (bars[2]) { bars[2].style.width = vals.stress + '%'; if(pcts[2]) pcts[2].textContent = vals.stress + '%'; }
+}
+function selOb(sel) {
+  return function(el) {
+    document.querySelectorAll(sel).forEach(c => c.classList.remove('sel'));
+    el.classList.add('sel');
+  };
+}
+// fix — onclick passes the element
+document.querySelectorAll('.ob-opt').forEach(el => {
+  el.addEventListener('click', function() {
+    this.closest('div').querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+    this.classList.add('sel');
+  });
+});
+
+// ════════ BREATHE ENGINE ════════
+let bTimer = null, bRound = 0, bTotal = 4;
+const bPh = [
+  { lbl:'שאיפה', sec:4, scale:'1.13', pp:'pp0' },
+  { lbl:'עצירה', sec:7, scale:'1.13', pp:'pp1' },
+  { lbl:'נשיפה', sec:8, scale:'1',    pp:'pp2' },
+];
+
+function startBreathe() {
+  const tech = TECHNIQUES[currentTech];
+  // עדכן מסך נשימה
+  document.getElementById('b-title').textContent  = tech.name;
+  document.getElementById('b-subtitle').textContent = tech.sub + ' · ' + tech.rounds + ' סבבים';
+  document.getElementById('pp0').querySelector('span').textContent = tech.ppLabels[0];
+  document.getElementById('pp1').querySelector('span').textContent = tech.ppLabels[1];
+  document.getElementById('pp2').querySelector('span').textContent = tech.ppLabels[2];
+  // הגדר phases ו-rounds
+  bTotal = tech.rounds;
+  // השתמש ב-phases של הטכניקה
+  window._bPh = tech.phases;
+  clearInterval(bTimer); bRound = 0; buildDots(); runRound();
+}
+
+function buildDots() {
+  const d = document.getElementById('dots'); d.innerHTML = '';
+  for (let i = 0; i < bTotal; i++) {
+    const e = document.createElement('div');
+    e.className = 'dot'; e.id = 'd' + i; d.appendChild(e);
+  }
+}
+function runRound() {
+  if (bRound >= bTotal) { stopBreath(); return; }
+  const de = document.getElementById('d' + bRound); if (de) de.classList.add('done');
+  runPhase(0, () => { bRound++; runRound(); });
+}
+function runPhase(idx, done) {
+  const phases = window._bPh || bPh;
+  if (idx >= phases.length) { done(); return; }
+  const p = phases[idx];
+
+  // צבע לפי שלב
+  const ring = document.getElementById('b-ring');
+  const lbl  = document.getElementById('b-lbl');
+  if (p.lbl === 'שאיפה') {
+    ring.style.borderColor     = '#1D9E75';
+    ring.style.background      = '#0d2820';
+    lbl.style.color            = '#5DCAA5';
+  } else if (p.lbl === 'עצירה') {
+    ring.style.borderColor     = '#378ADD';
+    ring.style.background      = '#0d1a2a';
+    lbl.style.color            = '#85B7EB';
+  } else if (p.lbl === 'נשיפה') {
+    ring.style.borderColor     = '#7F77DD';
+    ring.style.background      = '#1a0d2a';
+    lbl.style.color            = '#AFA9EC';
+  } else {
+    ring.style.borderColor     = '#2a5a4a';
+    ring.style.background      = '#0d2820';
+    lbl.style.color            = '#5DCAA5';
+  }
+
+  // מעגלים מתפשטים
+  spawnRipple(p.lbl);
+
+  // צליל
+  playPhaseSound(p.lbl);
+
+  document.getElementById('b-lbl').textContent = p.lbl;
+  document.getElementById('b-ring').style.transform = 'scale(' + p.scale + ')';
+  phases.forEach((_, i) => {
+    const el = document.getElementById(phases[i].pp); if (el) el.classList.toggle('on', i === idx);
+  });
+  let s = p.sec;
+  document.getElementById('b-num').textContent = s;
+  clearInterval(bTimer);
+  bTimer = setInterval(() => {
+    s--;
+    document.getElementById('b-num').textContent = Math.max(0, s);
+    if (s <= 0) { clearInterval(bTimer); runPhase(idx + 1, done); }
+  }, 1000);
+}
+function stopBreath() {
+  clearInterval(bTimer);
+  const tech = TECHNIQUES[currentTech];
+  saveSession(tech ? tech.mins : 3);
+  showToast('✓ אימון הושלם! כל הכבוד');
+  go('s-home');
+}
+
+// ════════ PROGRESS CHART — נתונים אמיתיים ════════
+async function loadWeekChart(userId) {
+  const today = new Date();
+  today.setHours(23,59,59,999);
+  const since = new Date(today);
+  since.setDate(today.getDate() - 6);
+  since.setHours(0,0,0,0);
+
+  // קח sessions מ-Supabase של 7 ימים אחרונים
+  const { data: sessions } = await sb
+    .from('sessions')
+    .select('created_at, duration_mins')
+    .eq('user_id', userId)
+    .gte('created_at', since.toISOString())
+    .lte('created_at', today.toISOString());
+
+  // מפה של תאריך → דקות
+  const dayMap = {};
+  (sessions || []).forEach(s => {
+    const day = s.created_at.split('T')[0];
+    dayMap[day] = (dayMap[day] || 0) + (s.duration_mins || 3);
+  });
+
+  const maxMins = Math.max(...Object.values(dayMap), 1);
+  let activeDays = 0, weekMins = 0, weekSessions = 0;
+  const dayLabels = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+
+  const container = document.getElementById('week-row');
+  container.innerHTML = '';
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const mins = dayMap[dateStr] || 0;
+    const isToday = i === 0;
+    if (mins > 0) { activeDays++; weekMins += mins; weekSessions++; }
+
+    const pct = mins > 0 ? Math.max((mins / maxMins) * 100, 15) : 0;
+    const dayIdx = d.getDay(); // 0=ראשון
+    const dayName = dayLabels[dayIdx === 0 ? 6 : dayIdx - 1];
+
+    const col = document.createElement('div');
+    col.className = 'day-col';
+    col.innerHTML = `
+      <div class="day-bg">
+        ${mins > 0 ? `<div class="day-bar" style="height:${pct}%"></div>` : ''}
+      </div>
+      <div class="day-lbl" style="${isToday ? 'color:#5DCAA5;font-weight:500' : ''}">${dayName}</div>
+      <div class="day-dot ${mins > 0 ? 'done' : ''}"></div>
+    `;
+    container.appendChild(col);
+  }
+
+  document.getElementById('prog-subtitle').textContent = `השבוע · ${activeDays} מתוך 7 ימים`;
+  if (weekSessions > 0) {
+    document.getElementById('p-sessions-week').textContent = `+${weekSessions} השבוע`;
+    document.getElementById('p-mins-week').textContent = `+${weekMins} דק׳ השבוע`;
+  } else {
+    document.getElementById('p-sessions-week').textContent = 'התחל היום!';
+    document.getElementById('p-mins-week').textContent = 'התחל היום!';
+  }
+}
+
+// ════════ REMINDER / NOTIFICATIONS ════════
+let reminderEnabled = false;
+let reminderTimer   = null;
+
+function toggleReminder() {
+  reminderEnabled = !reminderEnabled;
+  const tog   = document.getElementById('reminder-toggle');
+  const thumb = document.getElementById('reminder-thumb');
+  const status = document.getElementById('reminder-status');
+  if (reminderEnabled) {
+    tog.style.background   = '#1D9E75';
+    thumb.style.transform  = 'translateX(-20px)';
+    const time = document.getElementById('reminder-time').value || '08:00';
+    status.textContent = `תזכורת יומית בשעה ${time}`;
+    status.style.color = '#5DCAA5';
+    requestNotificationPermission();
+  } else {
+    tog.style.background  = '#2a2838';
+    thumb.style.transform = 'translateX(0)';
+    status.textContent    = 'התראה כבויה';
+    status.style.color    = '#4a4460';
+    if (reminderTimer) clearTimeout(reminderTimer);
+  }
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    showToast('הדפדפן לא תומך בהתראות');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    showToast('✓ התראות אופשרו');
+    scheduleReminder();
+  } else {
+    showToast('אפשר התראות בהגדרות הדפדפן');
+    reminderEnabled = false;
+    toggleReminder();
+  }
+}
+
+function scheduleReminder() {
+  if (reminderTimer) clearTimeout(reminderTimer);
+  const timeVal = document.getElementById('reminder-time').value || '08:00';
+  const [h, m]  = timeVal.split(':').map(Number);
+  const now     = new Date();
+  const target  = new Date();
+  target.setHours(h, m, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  const ms = target - now;
+  reminderTimer = setTimeout(() => {
+    const name = userName ? `, ${userName}` : '';
+    new Notification(`זמן לנשום${name} 🌬️`, {
+      body: 'לחץ להתחיל session של 3 דקות',
+      icon: '/favicon.ico'
+    });
+    scheduleReminder(); // קבע למחרת
+  }, ms);
+}
+
+function loadReminderSettings() {
+  const enabled = localStorage.getItem('neshimot_reminder') === 'true';
+  const time    = localStorage.getItem('neshimot_reminder_time') || '08:00';
+  const timeInput = document.getElementById('reminder-time');
+  if (timeInput) timeInput.value = time;
+  if (enabled) {
+    reminderEnabled = false; // כדי ש-toggle יפעיל
+    toggleReminder();
+  }
+}
+
+// ════════ SOUNDS ════════
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, vol = 0.15) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playPhaseSound(phase) {
+  if (phase === 'שאיפה') {
+    // קינג׳ עולה — ירוק
+    playTone(528, 'sine', 0.6, 0.12);
+    setTimeout(() => playTone(660, 'sine', 0.4, 0.08), 200);
+  } else if (phase === 'עצירה') {
+    // צליל יציב — כחול
+    playTone(432, 'sine', 0.5, 0.08);
+  } else if (phase === 'נשיפה') {
+    // שוממ יורד — סגול
+    playTone(396, 'sine', 0.8, 0.1);
+    setTimeout(() => playTone(320, 'sine', 0.6, 0.08), 300);
+  } else if (phase === 'מנוחה') {
+    playTone(256, 'sine', 0.4, 0.06);
+  }
+}
+
+// ════════ SETTINGS ════════
+let userGender = 'male';
+let userName   = '';
+
+function selectGender(g) {
+  userGender = g;
+  const isMale = g === 'male';
+  document.getElementById('gender-male').style.background   = isMale ? '#0d2820' : '#14141c';
+  document.getElementById('gender-male').style.borderColor  = isMale ? '#1D9E75' : '#2a2838';
+  document.getElementById('gender-male').style.borderWidth  = isMale ? '1.5px' : '.5px';
+  document.getElementById('gender-male').querySelector('div:last-child').style.color = isMale ? '#9FE1CB' : '#6b6480';
+  document.getElementById('gender-female').style.background  = !isMale ? '#0d2820' : '#14141c';
+  document.getElementById('gender-female').style.borderColor = !isMale ? '#1D9E75' : '#2a2838';
+  document.getElementById('gender-female').style.borderWidth = !isMale ? '1.5px' : '.5px';
+  document.getElementById('gender-female').querySelector('div:last-child').style.color = !isMale ? '#9FE1CB' : '#6b6480';
+  previewGreeting();
+}
+
+function previewGreeting() {
+  const name = document.getElementById('settings-name').value.trim();
+  const h = new Date().getHours();
+  const timeGreet = h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : 'ערב טוב';
+  const readyWord = userGender === 'female' ? 'מוכנה' : 'מוכן';
+  document.getElementById('preview-greeting').textContent = name ? `${timeGreet}, ${name}` : timeGreet;
+  document.getElementById('preview-ready').innerHTML = `${readyWord} <span style="color:#9FE1CB">לנשום?</span>`;
+}
+
+async function saveSettings() {
+  const name = document.getElementById('settings-name').value.trim();
+  const time = document.getElementById('reminder-time').value || '08:00';
+  userName   = name;
+
+  // שמור תזכורת
+  localStorage.setItem('neshimot_reminder',      reminderEnabled ? 'true' : 'false');
+  localStorage.setItem('neshimot_reminder_time', time);
+  if (reminderEnabled) scheduleReminder();
+
+  // שמור ב-Supabase
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    await sb.from('profiles').update({
+      full_name: name,
+      gender:    userGender
+    }).eq('id', user.id);
+  }
+
+  localStorage.setItem('neshimot_name',   name);
+  localStorage.setItem('neshimot_gender', userGender);
+
+  updateGreeting();
+  showToast('✓ ההגדרות נשמרו');
+  go('s-home');
+}
+
+async function loadSettings() {
+  // קודם טען מ-localStorage לטעינה מהירה
+  const cachedName   = localStorage.getItem('neshimot_name')   || '';
+  const cachedGender = localStorage.getItem('neshimot_gender') || 'male';
+  userName   = cachedName;
+  userGender = cachedGender;
+  updateGreeting();
+
+  // אחר כך טען מ-Supabase (הנתונים האמיתיים)
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    const { data: profile } = await sb.from('profiles')
+      .select('full_name, gender')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      // עדכן רק אם יש נתונים ב-Supabase
+      if (profile.full_name) {
+        userName = profile.full_name;
+        localStorage.setItem('neshimot_name', userName);
+      }
+      if (profile.gender) {
+        userGender = profile.gender;
+        localStorage.setItem('neshimot_gender', userGender);
+      }
+      // עדכן שדה שם במסך הגדרות
+      const nameInput = document.getElementById('settings-name');
+      if (nameInput) nameInput.value = userName;
+      selectGender(userGender);
+      updateGreeting();
+    }
+  }
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  const timeGreet = h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : 'ערב טוב';
+  const readyWord = userGender === 'female' ? 'מוכנה' : 'מוכן';
+  document.getElementById('greeting').textContent =
+    userName ? `${timeGreet}, ${userName}` : timeGreet;
+  document.getElementById('ready-text').innerHTML =
+    `${readyWord} <span class="teal-lt">לנשום?</span>`;
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  localStorage.removeItem('neshimot_name');
+  localStorage.removeItem('neshimot_gender');
+  document.getElementById('nav-bar').classList.remove('visible');
+  go('s-splash');
+}
+
+// ════════ PERSONALIZED ONBOARDING ════════
+let obGoal  = 'stress';
+let obTime  = 'morning';
+let obLevel = 'beginner';
+
+function selObGoal(el, goal) {
+  el.parentElement.querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  obGoal = goal;
+}
+function selObTime(el, time) {
+  el.parentElement.querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  obTime = time;
+}
+function selObLevel(el, level) {
+  el.parentElement.querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  obLevel = level;
+}
+
+const PLAN_BY_GOAL = {
+  stress: { tech:'4-7-8',     icon:'ti ti-wind',      reason:'הכי יעילה להפחתת לחץ מיידי' },
+  sleep:  { tech:'sleep',     icon:'ti ti-moon',      reason:'מכינה את הגוף לשינה עמוקה' },
+  energy: { tech:'coherence', icon:'ti ti-target',    reason:'משפרת מיקוד וחדות מחשבתית' },
+  health: { tech:'belly',     icon:'ti ti-heart',     reason:'בסיס מצוין לבריאות כללית' },
+};
+
+const SCHEDULE_BY_TIME = {
+  morning:  '☀️ מומלץ לתרגל כל בוקר, 6:00–9:00',
+  noon:     '🕐 מומלץ לתרגל בהפסקת הצהריים',
+  evening:  '🌙 מומלץ לתרגל בערב לפני שינה',
+  flexible: '🔄 תרגל מתי שנוח לך — אין לוח זמנים קבוע',
+};
+
+const LEVEL_LABEL = {
+  beginner:    'תוכנית למתחילים — נתחיל בקלי קלות',
+  some:        'תוכנית בינונית — מותאמת לניסיון שלך',
+  experienced: 'תוכנית מתקדמת — נאתגר אותך מעט',
+};
+
+function buildPersonalPlan() {
+  const plan = PLAN_BY_GOAL[obGoal];
+  recommendedTech = plan.tech;
+
+  // עדכן את מסך התוכנית
+  const techData = TECHNIQUES[plan.tech];
+  document.getElementById('plan-technique').textContent = techData.name;
+  document.getElementById('plan-reason').textContent    = plan.reason;
+  document.getElementById('plan-schedule').textContent  = SCHEDULE_BY_TIME[obTime];
+  document.getElementById('plan-level-chip').textContent = LEVEL_LABEL[obLevel];
+  document.getElementById('plan-icon').innerHTML = `<i class="${plan.icon}" style="font-size:20px;color:#E1F5EE"></i>`;
+
+  const goalNames = { stress:'הפחתת לחץ', sleep:'שיפור שינה', energy:'אנרגיה ומיקוד', health:'בריאות כללית' };
+  document.getElementById('plan-summary').textContent =
+    `בנינו לך תוכנית להשגת: ${goalNames[obGoal]}`;
+
+  // אם בחר תזכורת זמן קבוע — הצע להפעיל
+  if (obTime !== 'flexible') {
+    const timeMap = { morning: '08:00', noon: '13:00', evening: '21:00' };
+    localStorage.setItem('neshimot_reminder_time', timeMap[obTime]);
+  }
+
+  // שמור את הבחירות ב-Supabase
+  saveOnboardingData();
+}
+
+async function saveOnboardingData() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    await sb.from('profiles').update({
+      onboarding_goal:  obGoal,
+      onboarding_time:  obTime,
+      onboarding_level: obLevel
+    }).eq('id', user.id);
+  }
+}
+
+function startFirstSession() {
+  enterApp();
+  setTimeout(() => startTech(recommendedTech), 300);
+}
+
+// ════════ MOOD QUIZ ════════
+const MOOD_RECS = {
+  'לחץ':    { tech:'4-7-8',     icon:'ti ti-moon',     title:'נשימת 4-7-8',       desc:'הכי יעילה להפחתת לחץ מיידי. הנשיפה הארוכה מפעילה את מערכת הרגיעה ומורידה קורטיזול תוך 3 דקות.' },
+  'חרדה':   { tech:'box',       icon:'ti ti-square',   title:'Box Breathing',      desc:'הטכניקה שמשתמשים בה Navy SEALs לפני מצבי לחץ קיצוני. מאזנת את הנשימה ומורידה את דופק הלב.' },
+  'עייפות': { tech:'wimhof',    icon:'ti ti-bolt',     title:'שיטת וים הוף',       desc:'נשימות כוח שמציפות את הגוף בחמצן ונותנות אנרגיה טבעית תוך דקות. עדיפה על קפה.', pro:true },
+  'מיקוד':  { tech:'coherence', icon:'ti ti-wave-sine',title:'נשימת קוהרנטיות',    desc:'5 שניות שאיפה, 5 שניות נשיפה — מסנכרנת את הלב והמוח ומשפרת ריכוז ויכולת קבלת החלטות.', pro:true },
+  'שינה':   { tech:'sleep',     icon:'ti ti-moon',     title:'ירידה לשינה',        desc:'גרסה מורחבת של 4-7-8 שמכניסה את הגוף למצב שינה. עשה אותה במיטה בחושך.', pro:true },
+};
+
+let recommendedTech = null;
+
+function selectMoodQuiz(el, mood) {
+  document.querySelectorAll('.mood-quiz-opt').forEach(o => {
+    o.style.borderColor = '#2a2838';
+    o.style.background = '#14141c';
+  });
+  el.style.borderColor = '#1D9E75';
+  el.style.background = '#0d2820';
+
+  const rec = MOOD_RECS[mood];
+  recommendedTech = rec.tech;
+
+  document.getElementById('rec-icon').innerHTML = `<i class="${rec.icon}" style="font-size:15px;color:#5DCAA5"></i>`;
+  document.getElementById('rec-title').textContent = rec.title;
+  document.getElementById('rec-desc').textContent = rec.desc + (rec.pro && !isPro ? ' (דורש Pro)' : '');
+
+  setTimeout(() => {
+    document.getElementById('mood-quiz').style.display = 'none';
+    document.getElementById('mood-recommendation').style.display = 'block';
+  }, 300);
+
+  // עדכן mood גם בבית
+  currentMood = mood;
+  window._nextMood = mood;
+}
+
+function startRecommended() {
+  if (!recommendedTech) return;
+  const rec = MOOD_RECS[Object.keys(MOOD_RECS).find(k => MOOD_RECS[k].tech === recommendedTech)];
+  if (rec?.pro && !isPro) {
+    showToast('🔒 טכניקה זו זמינה ל-Pro בלבד');
+    setTimeout(() => go('s-pro'), 800);
+    return;
+  }
+  startTech(recommendedTech);
+}
+
+function resetMoodQuiz() {
+  document.getElementById('mood-quiz').style.display = 'block';
+  document.getElementById('mood-recommendation').style.display = 'none';
+  document.querySelectorAll('.mood-quiz-opt').forEach(o => {
+    o.style.borderColor = '#2a2838';
+    o.style.background = '#14141c';
+  });
+}
+
+// ════════ OWNER PRO ACCESS ════════
+// ════════ PRO STATUS ════════
+let isPro = false;
+
+function checkOwnerAccess() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('owner') === 'neshimot2024') {
+    isPro = true;
+    localStorage.setItem('neshimot_owner', 'true');
+    updateProUI();
+    showToast('✓ מצב בעלים — Pro פעיל');
+    return;
+  }
+  if (localStorage.getItem('neshimot_owner') === 'true') {
+    isPro = true;
+    updateProUI();
+  }
+}
+
+async function checkProStatus(userId) {
+  const { data } = await sb.from('profiles').select('is_pro').eq('id', userId).single();
+  isPro = data?.is_pro || false;
+  updateProUI();
+}
+
+function updateProUI() {
+  // הצג/הסתר תוכן Pro בכל האפליקציה
+  document.querySelectorAll('.pro-locked').forEach(el => {
+    el.style.opacity = isPro ? '1' : '0.5';
+    el.style.pointerEvents = isPro ? 'auto' : 'none';
+  });
+  document.querySelectorAll('.pro-lock-icon').forEach(el => {
+    el.style.display = isPro ? 'none' : 'flex';
+  });
+  // עדכן מסך Pro
+  const proBtn = document.getElementById('stripe-btn');
+  if (proBtn && isPro) {
+    proBtn.textContent = '✓ אתה כבר Pro!';
+    proBtn.style.background = '#0d2820';
+    proBtn.style.color = '#5DCAA5';
+    proBtn.disabled = true;
+  }
+}
+function setPlan(p) {
+  document.getElementById('ptm').classList.toggle('on', p === 'm');
+  document.getElementById('pty').classList.toggle('on', p === 'y');
+  if (p === 'm') {
+    document.getElementById('pbig').textContent          = '₪19';
+    document.getElementById('price-period').textContent  = ' / חודש';
+    document.getElementById('pnote').textContent         = 'חיוב חודשי · ביטול בכל עת';
+    document.getElementById('ptrial').textContent        = 'ללא חיוב ל-7 ימים ניסיון';
+  } else {
+    document.getElementById('pbig').textContent          = '₪199';
+    document.getElementById('price-period').textContent  = ' / שנה';
+    document.getElementById('pnote').textContent         = 'חיסכון של ₪29 לעומת חודשי';
+    document.getElementById('ptrial').textContent        = 'ללא חיוב ל-7 ימים ניסיון';
+  }
+}
+// ════════ SERVICE WORKER ════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
