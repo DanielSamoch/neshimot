@@ -16,7 +16,25 @@
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
 
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "c7371b63-29be-49d3-a3f5-72c60958df38",
+      serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js",
+      serviceWorkerParam: {
+        scope: "/push/onesignal/"
+      },
+      notifyButton: {
+        enable: true
+      }
+    });
+  });
+</script>
+
+  
   <style>
     /* ── RESET & BASE ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
