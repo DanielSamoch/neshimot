@@ -15,26 +15,13 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- OneSignal Push Notifications -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+  </script>
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "c7371b63-29be-49d3-a3f5-72c60958df38",
-      serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js",
-      serviceWorkerParam: {
-        scope: "/push/onesignal/"
-      },
-      notifyButton: {
-        enable: true
-      }
-    });
-  });
-</script>
-
-  
   <style>
     /* ── RESET & BASE ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1762,115 +1749,104 @@ async function loadWeekChart(userId) {
   }
 }
 
-// ════════ REMINDER / NOTIFICATIONS ════════
+// ════════ ONESIGNAL PUSH NOTIFICATIONS ════════
+const ONESIGNAL_APP_ID = 'c7371b63-29be-49d3-a3f5-72c60958df38';
+
+// אתחול OneSignal
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: ONESIGNAL_APP_ID,
+    notifyButton: { enable: false },
+    allowLocalhostAsSecureOrigin: true,
+  });
+});
+
 let reminderEnabled = false;
-const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY'; // ← מ-web-push generate-vapid-keys
 
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw     = atob(base64);
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-}
-
-function toggleReminder() {
-  reminderEnabled = !reminderEnabled;
-  const tog   = document.getElementById('reminder-toggle');
-  const thumb = document.getElementById('reminder-thumb');
+function updateReminderUI(enabled) {
+  const tog    = document.getElementById('reminder-toggle');
+  const thumb  = document.getElementById('reminder-thumb');
   const status = document.getElementById('reminder-status');
-  if (reminderEnabled) {
-    tog.style.background   = '#1D9E75';
-    thumb.style.transform  = 'translateX(-20px)';
-    const time = document.getElementById('reminder-time').value || '08:00';
+  if (!tog) return;
+  if (enabled) {
+    tog.style.background  = '#1D9E75';
+    thumb.style.transform = 'translateX(-20px)';
+    const time = document.getElementById('reminder-time')?.value || '08:00';
     status.textContent = `תזכורת יומית בשעה ${time} — גם כשהאפליקציה סגורה`;
     status.style.color = '#5DCAA5';
-    requestNotificationPermission();
   } else {
     tog.style.background  = '#2a2838';
     thumb.style.transform = 'translateX(0)';
     status.textContent    = 'התראה כבויה';
     status.style.color    = '#4a4460';
-    savePushSubscription(null); // נטרל תזכורות בשרת
+  }
+}
+
+function toggleReminder() {
+  reminderEnabled = !reminderEnabled;
+  updateReminderUI(reminderEnabled);
+  if (reminderEnabled) {
+    requestNotificationPermission();
+  } else {
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.User.PushSubscription.optOut();
+    });
+    saveReminderToSupabase(false);
+    showToast('התראות כובו');
   }
 }
 
 async function requestNotificationPermission() {
-  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-    showToast('הדפדפן הזה לא תומך בהתראות פוש');
-    reminderEnabled = false;
-    toggleReminder();
-    return;
-  }
-
-  const perm = await Notification.requestPermission();
-  if (perm !== 'granted') {
-    showToast('אפשר התראות בהגדרות הדפדפן');
-    reminderEnabled = false;
-    toggleReminder();
-    return;
-  }
-
   try {
-    const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    await new Promise((resolve, reject) => {
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.Notifications.requestPermission();
+          resolve();
+        } catch(e) { reject(e); }
       });
-    }
-    await savePushSubscription(sub);
+    });
+    await saveReminderToSupabase(true);
     showToast('✓ התראות פעילות — יעבדו גם כשהאפליקציה סגורה');
-  } catch (e) {
-    console.error('Push subscription failed:', e);
-    showToast('שגיאה בהפעלת התראות — נסה שוב');
+  } catch(e) {
+    console.error('Push permission error:', e);
+    showToast('לא הצלחנו להפעיל התראות — נסה שוב');
     reminderEnabled = false;
-    toggleReminder();
+    updateReminderUI(false);
   }
 }
 
-async function savePushSubscription(subscription) {
+async function saveReminderToSupabase(enabled) {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
   const time = document.getElementById('reminder-time')?.value || '08:00';
 
-  try {
-    await fetch('/api/save-subscription', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: user.id,
-        subscription,
-        reminderTime: time,
-        reminderEnabled: !!subscription
-      })
-    });
-  } catch (e) {
-    console.error('Failed to save subscription:', e);
-  }
+  // שמור OneSignal Player ID ב-Supabase
+  OneSignalDeferred.push(async function(OneSignal) {
+    const playerId = OneSignal.User.PushSubscription.id;
+    await sb.from('profiles').update({
+      push_subscription: playerId || null,
+      reminder_enabled:  enabled,
+      reminder_time:     time
+    }).eq('id', user.id);
+  });
+}
 
-  // גם ב-Supabase ישירות (גיבוי)
-  await sb.from('profiles').update({
-    reminder_time:    time,
-    reminder_enabled: !!subscription
-  }).eq('id', user.id);
+async function savePushSubscription(sub) {
+  await saveReminderToSupabase(!!sub);
 }
 
 async function loadReminderSettings() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
-
   const { data: profile } = await sb.from('profiles')
     .select('reminder_time, reminder_enabled')
-    .eq('id', user.id)
-    .single();
-
+    .eq('id', user.id).single();
   const timeInput = document.getElementById('reminder-time');
   if (profile?.reminder_time && timeInput) timeInput.value = profile.reminder_time;
-
   if (profile?.reminder_enabled) {
-    reminderEnabled = false; // כדי ש-toggle יפעיל
-    toggleReminder();
+    reminderEnabled = true;
+    updateReminderUI(true);
   }
 }
 
