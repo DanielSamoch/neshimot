@@ -4,5 +4,26 @@
       "path": "/api/send-reminders",
       "schedule": "0 * * * *"
     }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/OneSignalSDKWorker.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/sw.js", "destination": "/sw.js" },
+    { "source": "/OneSignalSDKWorker.js", "destination": "/OneSignalSDKWorker.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
