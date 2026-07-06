@@ -15,11 +15,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- OneSignal Push Notifications -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-  </script>
+
 
 
   <style>
@@ -1036,20 +1032,6 @@
 
 
 
-        <!-- שעת תזכורת -->
-        <div style="margin-bottom:24px">
-          <label style="display:block;font-size:12px;color:#6b6480;margin-bottom:6px">תזכורת יומית</label>
-          <div style="display:flex;align-items:center;gap:12px;flex-direction:row-reverse">
-            <div style="flex:1;position:relative">
-              <input class="inp" id="reminder-time" type="time" value="08:00" style="text-align:center;direction:ltr;cursor:pointer">
-            </div>
-            <div id="reminder-toggle" onclick="toggleReminder()" style="width:48px;height:28px;border-radius:14px;background:#2a2838;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s">
-              <div id="reminder-thumb" style="width:22px;height:22px;border-radius:50%;background:#e8e6f0;position:absolute;top:3px;right:3px;transition:transform .2s"></div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:#4a4460;margin-top:6px;text-align:right" id="reminder-status">התראה כבויה</div>
-        </div>
-
         <button class="btn btn-primary" onclick="saveSettings()">שמור</button>
 
         <!-- כפתור Pro -->
@@ -1145,7 +1127,6 @@ function enterApp() {
   loadSettings();
   loadLanguage();
   checkOwnerAccess();
-  loadReminderSettings();
   go('s-home');
 }
 
@@ -1749,107 +1730,6 @@ async function loadWeekChart(userId) {
   }
 }
 
-// ════════ ONESIGNAL PUSH NOTIFICATIONS ════════
-const ONESIGNAL_APP_ID = 'c7371b63-29be-49d3-a3f5-72c60958df38';
-
-// אתחול OneSignal
-OneSignalDeferred.push(async function(OneSignal) {
-  await OneSignal.init({
-    appId: ONESIGNAL_APP_ID,
-    notifyButton: { enable: false },
-    allowLocalhostAsSecureOrigin: true,
-  });
-});
-
-let reminderEnabled = false;
-
-function updateReminderUI(enabled) {
-  const tog    = document.getElementById('reminder-toggle');
-  const thumb  = document.getElementById('reminder-thumb');
-  const status = document.getElementById('reminder-status');
-  if (!tog) return;
-  if (enabled) {
-    tog.style.background  = '#1D9E75';
-    thumb.style.transform = 'translateX(-20px)';
-    const time = document.getElementById('reminder-time')?.value || '08:00';
-    status.textContent = `תזכורת יומית בשעה ${time} — גם כשהאפליקציה סגורה`;
-    status.style.color = '#5DCAA5';
-  } else {
-    tog.style.background  = '#2a2838';
-    thumb.style.transform = 'translateX(0)';
-    status.textContent    = 'התראה כבויה';
-    status.style.color    = '#4a4460';
-  }
-}
-
-function toggleReminder() {
-  reminderEnabled = !reminderEnabled;
-  updateReminderUI(reminderEnabled);
-  if (reminderEnabled) {
-    requestNotificationPermission();
-  } else {
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.User.PushSubscription.optOut();
-    });
-    saveReminderToSupabase(false);
-    showToast('התראות כובו');
-  }
-}
-
-async function requestNotificationPermission() {
-  try {
-    await new Promise((resolve, reject) => {
-      OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          await OneSignal.Notifications.requestPermission();
-          resolve();
-        } catch(e) { reject(e); }
-      });
-    });
-    await saveReminderToSupabase(true);
-    showToast('✓ התראות פעילות — יעבדו גם כשהאפליקציה סגורה');
-  } catch(e) {
-    console.error('Push permission error:', e);
-    showToast('לא הצלחנו להפעיל התראות — נסה שוב');
-    reminderEnabled = false;
-    updateReminderUI(false);
-  }
-}
-
-async function saveReminderToSupabase(enabled) {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return;
-  const time = document.getElementById('reminder-time')?.value || '08:00';
-
-  // שמור OneSignal Player ID ב-Supabase
-  OneSignalDeferred.push(async function(OneSignal) {
-    const playerId = OneSignal.User.PushSubscription.id;
-    await sb.from('profiles').update({
-      push_subscription: playerId || null,
-      reminder_enabled:  enabled,
-      reminder_time:     time
-    }).eq('id', user.id);
-  });
-}
-
-async function savePushSubscription(sub) {
-  await saveReminderToSupabase(!!sub);
-}
-
-async function loadReminderSettings() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return;
-  const { data: profile } = await sb.from('profiles')
-    .select('reminder_time, reminder_enabled')
-    .eq('id', user.id).single();
-  const timeInput = document.getElementById('reminder-time');
-  if (profile?.reminder_time && timeInput) timeInput.value = profile.reminder_time;
-  if (profile?.reminder_enabled) {
-    reminderEnabled = true;
-    updateReminderUI(true);
-  }
-}
-
 // ════════ SOUNDS ════════
 let audioCtx = null;
 
@@ -1945,20 +1825,12 @@ async function saveSettings() {
   const time = document.getElementById('reminder-time').value || '08:00';
   userName   = name;
 
-  // עדכן שעת תזכורת אם פעילה
-  if (reminderEnabled) {
-    await savePushSubscription((await navigator.serviceWorker.ready).pushManager.getSubscription
-      ? await (await navigator.serviceWorker.ready).pushManager.getSubscription()
-      : null);
-  }
-
   // שמור ב-Supabase
   const { data: { user } } = await sb.auth.getUser();
   if (user) {
     await sb.from('profiles').update({
       full_name: name,
       gender:    userGender,
-      reminder_time: time
     }).eq('id', user.id);
   }
 
@@ -2045,4 +1917,119 @@ function selObLevel(el, level) {
 }
 
 const PLAN_BY_GOAL = {
-  stress: { tech:'4-7-8',     icon:'ti ti-wind',      reas
+  stress: { tech:'4-7-8',     icon:'ti ti-wind',      reason:'הכי יעילה להפחתת לחץ מיידי' },
+  sleep:  { tech:'sleep',     icon:'ti ti-moon',      reason:'מכינה את הגוף לשינה עמוקה' },
+  energy: { tech:'coherence', icon:'ti ti-target',    reason:'משפרת מיקוד וחדות מחשבתית' },
+  health: { tech:'belly',     icon:'ti ti-heart',     reason:'בסיס מצוין לבריאות כללית' },
+};
+
+const SCHEDULE_BY_TIME = {
+  morning:  '☀️ מומלץ לתרגל כל בוקר, 6:00–9:00',
+  noon:     '🕐 מומלץ לתרגל בהפסקת הצהריים',
+  evening:  '🌙 מומלץ לתרגל בערב לפני שינה',
+  flexible: '🔄 תרגל מתי שנוח לך — אין לוח זמנים קבוע',
+};
+
+const LEVEL_LABEL = {
+  beginner:    'תוכנית למתחילים — נתחיל בקלי קלות',
+  some:        'תוכנית בינונית — מותאמת לניסיון שלך',
+  experienced: 'תוכנית מתקדמת — נאתגר אותך מעט',
+};
+
+function buildPersonalPlan() {
+  const plan = PLAN_BY_GOAL[obGoal];
+  recommendedTech = plan.tech;
+
+  // עדכן את מסך התוכנית
+  const techData = TECHNIQUES[plan.tech];
+  document.getElementById('plan-technique').textContent = techData.name;
+  document.getElementById('plan-reason').textContent    = plan.reason;
+  document.getElementById('plan-schedule').textContent  = SCHEDULE_BY_TIME[obTime];
+  document.getElementById('plan-level-chip').textContent = LEVEL_LABEL[obLevel];
+  document.getElementById('plan-icon').innerHTML = `<i class="${plan.icon}" style="font-size:20px;color:#E1F5EE"></i>`;
+
+  const goalNames = { stress:'הפחתת לחץ', sleep:'שיפור שינה', energy:'אנרגיה ומיקוד', health:'בריאות כללית' };
+  document.getElementById('plan-summary').textContent =
+    `בנינו לך תוכנית להשגת: ${goalNames[obGoal]}`;
+
+  // אם בחר זמן קבוע — קבע את שעת התזכורת בפועל (לא רק localStorage)
+  if (obTime !== 'flexible') {
+    const timeMap = { morning: '08:00', noon: '13:00', evening: '21:00' };
+    window._onboardingReminderTime = timeMap[obTime];
+  } else {
+    window._onboardingReminderTime = null;
+  }
+
+  // שמור את הבחירות ב-Supabase
+  saveOnboardingData();
+}
+
+async function saveOnboardingData() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    await sb.from('profiles').update({
+      onboarding_goal:  obGoal,
+      onboarding_time:  obTime,
+      onboarding_level: obLevel
+    }).eq('id', user.id);
+  }
+}
+
+function startFirstSession() {
+  enterApp();
+  setTimeout(() => startTech(recommendedTech), 300);
+}
+
+// ════════ MOOD QUIZ ════════
+const MOOD_RECS = {
+  'לחץ':    { tech:'4-7-8',     icon:'ti ti-moon',     title:'נשימת 4-7-8',       desc:'הכי יעילה להפחתת לחץ מיידי. הנשיפה הארוכה מפעילה את מערכת הרגיעה ומורידה קורטיזול תוך 3 דקות.' },
+  'חרדה':   { tech:'box',       icon:'ti ti-square',   title:'Box Breathing',      desc:'הטכניקה שמשתמשים בה Navy SEALs לפני מצבי לחץ קיצוני. מאזנת את הנשימה ומורידה את דופק הלב.' },
+  'עייפות': { tech:'wimhof',    icon:'ti ti-bolt',     title:'שיטת וים הוף',       desc:'נשימות כוח שמציפות את הגוף בחמצן ונותנות אנרגיה טבעית תוך דקות. עדיפה על קפה.', pro:true },
+  'מיקוד':  { tech:'coherence', icon:'ti ti-wave-sine',title:'נשימת קוהרנטיות',    desc:'5 שניות שאיפה, 5 שניות נשיפה — מסנכרנת את הלב והמוח ומשפרת ריכוז ויכולת קבלת החלטות.', pro:true },
+  'שינה':   { tech:'sleep',     icon:'ti ti-moon',     title:'ירידה לשינה',        desc:'גרסה מורחבת של 4-7-8 שמכניסה את הגוף למצב שינה. עשה אותה במיטה בחושך.', pro:true },
+};
+
+let recommendedTech = null;
+
+function selectMoodQuiz(el, mood) {
+  document.querySelectorAll('.mood-quiz-opt').forEach(o => {
+    o.style.borderColor = '#2a2838';
+    o.style.background = '#14141c';
+  });
+  el.style.borderColor = '#1D9E75';
+  el.style.background = '#0d2820';
+
+  const rec = MOOD_RECS[mood];
+  recommendedTech = rec.tech;
+
+  document.getElementById('rec-icon').innerHTML = `<i class="${rec.icon}" style="font-size:15px;color:#5DCAA5"></i>`;
+  document.getElementById('rec-title').textContent = rec.title;
+  document.getElementById('rec-desc').textContent = rec.desc + (rec.pro && !isPro ? ' (דורש Pro)' : '');
+
+  setTimeout(() => {
+    document.getElementById('mood-quiz').style.display = 'none';
+    document.getElementById('mood-recommendation').style.display = 'block';
+  }, 300);
+
+  // עדכן mood גם בבית
+  currentMood = mood;
+  window._nextMood = mood;
+}
+
+function startRecommended() {
+  if (!recommendedTech) return;
+  const rec = MOOD_RECS[Object.keys(MOOD_RECS).find(k => MOOD_RECS[k].tech === recommendedTech)];
+  if (rec?.pro && !isPro) {
+    showToast('🔒 טכניקה זו זמינה ל-Pro בלבד');
+    setTimeout(() => go('s-pro'), 800);
+    return;
+  }
+  startTech(recommendedTech);
+}
+
+function resetMoodQuiz() {
+  document.getElementById('mood-quiz').style.display = 'block';
+  document.getElementById('mood-recommendation').style.display = 'none';
+  document.querySelectorAll('.mood-quiz-opt').forEach(o => {
+    o.style.borderColor = '#2a2838';
+    o.
